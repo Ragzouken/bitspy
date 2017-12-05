@@ -121,7 +121,7 @@ class BitsyPlayer:
 
         self.generate_dialogue(world["title"])
 
-    def move_input(self, direction):
+    def direction_input(self, direction):
         if self.dialogue_lines:
             self.advance_dialogue()
         else:
@@ -177,7 +177,7 @@ class BitsyPlayer:
 
         self.avatar_x = dest["x"]
         self.avatar_y = dest["y"]
-        self.set_room(world["rooms"][dest["room"]])
+        self.set_room(self.world["rooms"][dest["room"]])
 
     def use_ending(self, ending):
         self.generate_dialogue(world["endings"][ending["id"]]["text"])
@@ -188,7 +188,7 @@ class BitsyPlayer:
         tile = self.avatar_room["tilemap"][y][x]
 
         for sprite in self.world["sprites"].values():
-            if sprite["room"] == self.avatar_room and self.avatar_occupying(x, y) and sprite["id"] != "A":
+            if sprite["room"] == self.avatar_room["id"] and x == sprite["x"] and y == sprite["y"] and sprite["id"] != "A":
                 self.generate_dialogue(self.world["dialogues"][sprite["dialogue"]]["text"])
                 return
 
@@ -230,13 +230,13 @@ class BitsyPlayer:
                 if id == "0":
                     surface.fill(BGR, (x * 16, y * 16, 16, 16))
                     continue
-                tile = world["tiles"][id]
+                tile = self.world["tiles"][id]
 
                 surface.blit(self.renders["tile_" + id][frame], (x * 16, y * 16))
 
                 #draw_graphic(surface, x, y, tile, frame, 1)
 
-        for sprite in world["sprites"].values():
+        for sprite in self.world["sprites"].values():
             if sprite["id"] != "A" and sprite["room"] == room["id"]:
                 surface.blit(self.renders["sprite_" + sprite["id"]][frame], (sprite["x"] * 16, sprite["y"] * 16))
 
@@ -331,8 +331,6 @@ class BitsyPlayer:
         self.dialogue_lines.extend(rows)
 
 def load_file(name):
-    global world
-
     root = os.path.dirname(__file__)
     file = os.path.join(root, "games", name + ".bitsy.txt")
     music = os.path.join(root, "games", name + ".ogg")
@@ -350,6 +348,8 @@ def load_file(name):
             pygame.mixer.music.play(-1)
         except Exception as exception:
             print(exception)
+
+        return world
 
 def load_game():
     off = 8
@@ -379,9 +379,6 @@ def load_game():
         name, _, _ = filename.split(".")
 
         launcher.games.append(name)
-
-        load_file(name)
-        return
     
 def draw_graphic(surface, ox, oy, tile, anim, primary):
     graphic = tile["graphic"]
@@ -436,28 +433,6 @@ def recolor(surface, palette):
     pixels.replace(TIL, palette[1])
     pixels.replace(SPR, palette[2])
 
-def draw_room(surface, room, frame):
-    for y in xrange(0, 16):
-        for x in xrange(0, 16):
-            id = room["tilemap"][y][x]
-            if id == "0":
-                pygame.draw.rect(surface, BGR, [x * 16, y * 16, 16, 16])
-                continue
-            tile = world["tiles"][id]
-
-            surface.blit(renders["tile_" + id][frame], (x * 16, y * 16))
-
-            #draw_graphic(surface, x, y, tile, frame, 1)
-
-    for sprite in world["sprites"].values():
-        if sprite["id"] != "A" and sprite["room"] == room["id"]:
-            surface.blit(renders["sprite_" + sprite["id"]][frame], (sprite["x"] * 16, sprite["y"] * 16))
-
-    #for exit in room["exits"]:
-    #    pygame.draw.rect(surface, SPR, [exit["x"] * 16 + 2, exit["y"] * 16 + 2, 12, 12])
-
-    recolor(surface, palette)
-
 launcher = Launcher()
 player = BitsyPlayer()
 
@@ -494,7 +469,7 @@ def game_loop():
     exit = False
     anim = 0
 
-    player.change_world(world)
+    player.change_world(load_file(launcher.games[0]))
 
     while not player.ended and not exit:
         for event in pygame.event.get():
@@ -533,8 +508,7 @@ def game_loop():
                     ALIGN = "RIGHT"
 
         if anim % 3 == 0 and key:
-            dir = (dir - ROTATE) % 4
-            player.move_input(dir)
+            player.direction_input((dir - ROTATE) % 4)
             dir = -1
             key = False
 
