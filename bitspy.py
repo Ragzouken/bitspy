@@ -119,7 +119,7 @@ class BitsyPlayer:
 
         self.set_room(self.world["rooms"][self.world["sprites"]["A"]["room"]])
 
-        self.generate_dialogue(world["title"])
+        self.generate_dialogue(self.world["title"])
 
     def direction_input(self, direction):
         if self.dialogue_lines:
@@ -180,7 +180,7 @@ class BitsyPlayer:
         self.set_room(self.world["rooms"][dest["room"]])
 
     def use_ending(self, ending):
-        self.generate_dialogue(world["endings"][ending["id"]]["text"])
+        self.generate_dialogue(self.world["endings"][ending["id"]]["text"])
         self.ending = True
 
     def move_into(self, x, y):
@@ -459,7 +459,7 @@ def draw():
     #pad_y = 0
     gameDisplay.blit(screen2, (pad_x, pad_y))
 
-    pygame.display.update()
+    pygame.display.update((pad_x, pad_y, SCREEN[0], SCREEN[1]))
 
 def game_loop():
     global ROTATE, ALIGN
