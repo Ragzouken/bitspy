@@ -33,6 +33,13 @@ class BitsyParser:
             else:
                 self.skip_line()
 
+        self.repair()
+
+    def repair(self):
+        for id, sprite in self.world["sprites"].iteritems():
+            if sprite["dialogue"] is None and id in self.world["dialogues"]:
+                sprite["dialogue"] = id
+
     def take_line(self):        
         line = self.lines[self.index]
         self.index += 1
@@ -49,6 +56,9 @@ class BitsyParser:
 
     def check_line(self, start):
         return self.peek_line().startswith(start)
+
+    def check_blank(self):
+        return len(self.peek_line().strip()) == 0
 
     def take_split(self, delimiter):
         return self.take_line().split(delimiter)
@@ -69,13 +79,14 @@ class BitsyParser:
         room = {
             "exits": [],
             "endings": [],
+            "palette": "0",
         }
 
         _, room["id"] = self.take_split(" ")
         room["tilemap"] = [self.take_split(",") for y in xrange(0, 16)]
         room["name"] = self.parse_name()
 
-        while not self.check_line("PAL"):
+        while not self.check_line("PAL") and not self.check_blank():
             if self.check_line("EXT "):
                 room["exits"].append(self.parse_exit())
             elif self.check_line("WAL "):
@@ -86,7 +97,8 @@ class BitsyParser:
                 print("skipping " + self.peek_line())
                 self.take_line()
 
-        _, room["palette"] = self.take_split(" ")
+        if self.check_line("PAL"):
+            _, room["palette"] = self.take_split(" ")
 
         self.add_object("rooms", room)
 
@@ -138,7 +150,7 @@ class BitsyParser:
             "room": None,
             "x": 0,
             "y": 0,
-            "dialogue": "",
+            "dialogue": None,
         }
 
         _, sprite["id"] = self.take_split(" ")

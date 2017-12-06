@@ -350,27 +350,12 @@ def load_file(name):
         return world
 
 def load_game():
-    off = 8
-
-    gameDisplay.fill(BLK)
-    pygame.draw.rect(gameDisplay, 
-                     BLK, 
-                     [off, off, SCREEN[0] - off * 2, SCREEN[1] - off * 2])
-    pygame.display.update()
-
     game = {}
 
     data = ""
 
     root = os.path.dirname(__file__)
     search = os.path.join(root, "games", "*.bitsy.txt")
-
-    url = r"http://api.github.com/gists/1b7cc99139948d1f908962e4ef39b7fb"
-    data = json.load(urllib2.urlopen(url))
-
-    for name, entry in data["files"].iteritems():
-        dest = os.path.join(root, "games", name)
-        open(dest, "wb").write(entry["content"])
 
     for file in glob.glob(search):
         path, filename = os.path.split(file)
