@@ -82,6 +82,7 @@ class BitsyParser:
             "id": "0",
             "exits": [],
             "endings": [],
+            "walls": [],
         }
 
         _, room["palette"] = self.take_split(" ")
