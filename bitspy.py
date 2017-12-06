@@ -27,6 +27,7 @@ clock = pygame.time.Clock()
 FPS = 15
 font = [pygame.Surface((6, 8)) for i in xrange(256)]
 arrow = pygame.Surface((5, 3))
+background = pygame.Surface((256, 256))
 
 BLK = 0x000000
 WHT = 0xFFFFFF
@@ -47,35 +48,29 @@ class Launcher:
         self.page = 0
         self.row = 0
         self.games = []
+        self.chunk = []
         self.screen = pygame.Surface((256, 256))
         self.selected = ""
 
-    def event(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                load_file(self.selected)
-            elif event.key == pygame.K_RIGHT:
-                pass
-            elif event.key == pygame.K_UP:
-                self.row = self.row - 1
-            elif event.key == pygame.K_DOWN:
-                self.row = self.row + 1
-            elif event.key == pygame.K_q:
-                exit = True
-            elif event.key == pygame.K_ESCAPE:
-                exit = True
+    def direction_input(self, direction):
+        if direction == 3:
+            self.row = (self.row - 1) % len(self.chunk)
+        elif direction == 1:
+            self.row = (self.row + 1) % len(self.chunk)
+        elif direction == 0:
+            player.change_world(load_file(self.selected))
 
-            self.render_page()
+        self.render_page()
 
     def render_page(self):
         rows_per_page = 32
-        games = chunk(self.games, rows_per_page, self.page)
-        self.selected = games[self.row]
+        self.chunk = chunk(self.games, rows_per_page, self.page)
+        self.selected = self.games[self.row]
 
-        self.screen.fill(BLK)
+        self.screen.blit(background, (0, 0))
         self.screen.fill((64, 0, 0), (0, self.row * 10, 256, 10))
 
-        for i, name in enumerate(games):
+        for i, name in enumerate(self.chunk):
             self.render_text(name, 1, i * 10 + 1)
 
     def render_text(self, text, x, y):
@@ -104,9 +99,9 @@ class BitsyPlayer:
         self.dialogue_lines = []
         self.dialogue_char = 0
 
-        self.starting = True
+        self.starting = False
         self.ending = False
-        self.ended = False
+        self.ended = True
 
         self.prev_frame = -1
 
@@ -120,6 +115,9 @@ class BitsyPlayer:
         self.set_room(self.world["rooms"][self.world["sprites"]["A"]["room"]])
 
         self.generate_dialogue(self.world["title"])
+        self.starting = True
+        self.ending = False
+        self.ended = False
 
     def direction_input(self, direction):
         if self.dialogue_lines:
@@ -354,7 +352,7 @@ def load_file(name):
 def load_game():
     off = 8
 
-    gameDisplay.fill(WHT)
+    gameDisplay.fill(BLK)
     pygame.draw.rect(gameDisplay, 
                      BLK, 
                      [off, off, SCREEN[0] - off * 2, SCREEN[1] - off * 2])
@@ -451,7 +449,8 @@ def draw():
     elif ALIGN == "RIGHT":
         pad_x = SCREEN[0] - 256 - pad_y
 
-    #player.screen.blit(launcher.screen, (0, 0))
+    if player.ended:
+        player.screen.blit(launcher.screen, (0, 0))
     
     screen2 = pygame.transform.rotate(player.screen, -90 * ROTATE)
     #screen2 = pygame.transform.scale(screen, (512, 512))
@@ -461,6 +460,10 @@ def draw():
 
     pygame.display.update((pad_x, pad_y, SCREEN[0], SCREEN[1]))
 
+def clear_screen():
+    gameDisplay.fill(BLK)
+    pygame.display.update()
+
 def game_loop():
     global ROTATE, ALIGN
 
@@ -469,14 +472,15 @@ def game_loop():
     exit = False
     anim = 0
 
-    player.change_world(load_file(launcher.games[0]))
+    launcher.render_page()
 
-    while not player.ended and not exit:
+    while not exit:
         for event in pygame.event.get():
-            launcher.event(event)
-
             if event.type == pygame.QUIT:
-                exit = True
+                if player.ended:
+                    exit = True
+                else: 
+                    player.ended = True
             if event.type == pygame.KEYDOWN:
                 key = True
 
@@ -489,9 +493,15 @@ def game_loop():
                 elif event.key == pygame.K_DOWN:
                     dir = 1
                 elif event.key == pygame.K_q:
-                    exit = True
+                    if player.ended:
+                        exit = True
+                    else: 
+                        player.ended = True
                 elif event.key == pygame.K_ESCAPE:
-                    exit = True
+                    if player.ended:
+                        exit = True
+                    else: 
+                        player.ended = True
                 elif event.key == pygame.K_0:
                     ROTATE = 0
                 elif event.key == pygame.K_1:
@@ -502,17 +512,36 @@ def game_loop():
                     ROTATE = 3
                 elif event.key == pygame.K_i:
                     ALIGN = "LEFT"
+                    clear_screen()
                 elif event.key == pygame.K_o:
                     ALIGN = "CENTER"
+                    clear_screen()
                 elif event.key == pygame.K_p:
                     ALIGN = "RIGHT"
+                    clear_screen()
 
         if anim % 3 == 0 and key:
-            player.direction_input((dir - ROTATE) % 4)
+            if dir >= 0:
+                dir = (dir - ROTATE) % 4
+            
+            if not player.ended:
+                player.direction_input(dir)
+
+                sx = random.randint(0, 15)
+                sy = random.randint(0, 15)
+
+                background.blit(player.screen, 
+                                (sx * 16, sy * 16),
+                                (sx * 16, sy * 16, 16, 16))
+            else:
+                launcher.direction_input(dir)
+
             dir = -1
             key = False
 
-        player.set_frame_count(anim)
+        if not player.ended:
+            player.set_frame_count(anim)
+        
         draw()
         
         clock.tick(FPS)

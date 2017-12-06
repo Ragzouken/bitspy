@@ -162,6 +162,7 @@ class BitsyParser:
 
         if self.check_line('"""'):
             self.take_line()
+            dialogue["text"] = []
             while not self.check_line('"""'):
                 dialogue["text"].append(self.take_line())
             dialogue["text"] = "\n".join(dialogue["text"])
