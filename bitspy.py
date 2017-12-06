@@ -4,9 +4,11 @@ import random
 import glob
 import urllib2
 import os
-import json
+import csv
+import traceback
 
 from parsing import BitsyParser
+from library import read_index
 
 # CONFIG #
 SCREEN = (480, 272)
@@ -24,16 +26,17 @@ pygame.display.set_caption('bitspy')
 
 clock = pygame.time.Clock()
 
-FPS = 15
-font = [pygame.Surface((6, 8)) for i in xrange(256)]
-arrow = pygame.Surface((5, 3))
-background = pygame.Surface((256, 256))
-
 BLK = 0x000000
 WHT = 0xFFFFFF
 BGR = 0x999999
 TIL = 0xFF0000
 SPR = 0xFFFFFF
+
+FPS = 15
+font = [pygame.Surface((6, 8)) for i in xrange(256)]
+arrow = pygame.Surface((5, 3))
+background = pygame.Surface((256, 256))
+background.fill(BGR)
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
@@ -44,34 +47,49 @@ def chunk(l, n, i):
     return l[i:i + n]
 
 class Launcher:
+    ROWS_PER_PAGE = 20
+
     def __init__(self):
         self.page = 0
         self.row = 0
+        self.offset = 0
         self.games = []
-        self.chunk = []
         self.screen = pygame.Surface((256, 256))
         self.selected = ""
 
     def direction_input(self, direction):
         if direction == 3:
-            self.row = (self.row - 1) % len(self.chunk)
+            self.row = (self.row - 1) % len(self.games)
         elif direction == 1:
-            self.row = (self.row + 1) % len(self.chunk)
+            self.row = (self.row + 1) % len(self.games)
         elif direction == 0:
-            player.change_world(load_file(self.selected))
+            try:
+                player.change_world(load_file(self.selected["boid"]))
+            except:
+                traceback.print_exc()
+                self.games.remove(self.selected)
+                self.row = (self.row - 1) % len(self.games)
+                player.ended = True
+
+        if self.row - self.offset >= self.ROWS_PER_PAGE - 4:
+            self.offset = min(self.offset + 4, len(self.games))
+        if self.row - self.offset <= 4:
+            self.offset = max(self.offset - 4, 0)
 
         self.render_page()
 
     def render_page(self):
-        rows_per_page = 32
-        self.chunk = chunk(self.games, rows_per_page, self.page)
+        chunk = self.games[self.offset:self.offset+self.ROWS_PER_PAGE]
+        row = self.row - self.offset
         self.selected = self.games[self.row]
 
         self.screen.blit(background, (0, 0))
-        self.screen.fill((64, 0, 0), (0, self.row * 10, 256, 10))
+        self.screen.fill((64, 0, 0), (8, row * 12 + 8, 256, 10))
 
-        for i, name in enumerate(self.chunk):
-            self.render_text(name, 1, i * 10 + 1)
+        for i, entry in enumerate(chunk):
+            text = entry["title"]
+            self.screen.fill(BLK, (8, i * 12 + 8, len(text) * 6 + 2, 10))
+            self.render_text(text, 8 + 1, i * 12 + 8 + 1)
 
     def render_text(self, text, x, y):
         for i, c in enumerate(text):
@@ -82,7 +100,6 @@ class BitsyPlayer:
         self.screen = pygame.Surface((256, 256))
         self.dialog = pygame.Surface((208, 38))
 
-        self.frame = 0
         self.room_frame_0 = pygame.Surface((256, 256))
         self.room_frame_1 = pygame.Surface((256, 256))
 
@@ -102,10 +119,17 @@ class BitsyPlayer:
         self.starting = False
         self.ending = False
         self.ended = True
-
         self.prev_frame = -1
 
     def change_world(self, world):
+        self.dialogue_lines = []
+        self.dialogue_char = 0
+
+        self.prev_frame = -1
+        self.starting = True
+        self.ending = False
+        self.ended = False
+
         self.world = world
         self.pre_render_graphics()
 
@@ -115,9 +139,6 @@ class BitsyPlayer:
         self.set_room(self.world["rooms"][self.world["sprites"]["A"]["room"]])
 
         self.generate_dialogue(self.world["title"])
-        self.starting = True
-        self.ending = False
-        self.ended = False
 
     def direction_input(self, direction):
         if self.dialogue_lines:
@@ -187,7 +208,9 @@ class BitsyPlayer:
 
         for sprite in self.world["sprites"].values():
             if sprite["room"] == self.avatar_room["id"] and x == sprite["x"] and y == sprite["y"] and sprite["id"] != "A":
-                self.generate_dialogue(self.world["dialogues"][sprite["dialogue"]]["text"])
+                dialogue = sprite["dialogue"]
+                if dialogue is not None:
+                    self.generate_dialogue(self.world["dialogues"][dialogue]["text"])
                 return
 
         if not tile in room["walls"]:
@@ -252,10 +275,10 @@ class BitsyPlayer:
         if self.ending:
             self.ended = True
 
-        if self.starting:
-            self.starting = False
-
         self.dialogue_lines = self.dialogue_lines[2:]
+
+        if not self.dialogue_lines:
+            self.starting = False
 
         self.dialog.fill(BLK)
         self.dialogue_char = 0
@@ -357,11 +380,18 @@ def load_game():
     root = os.path.dirname(__file__)
     search = os.path.join(root, "games", "*.bitsy.txt")
 
+    global index
+    index = read_index(open(os.path.join(root, "games", "index.txt"), "rb"))
+
     for file in glob.glob(search):
         path, filename = os.path.split(file)
-        name, _, _ = filename.split(".")
+        boid, _, _ = filename.split(".")
 
-        launcher.games.append(name)
+        if boid in index:
+            launcher.games.append(index[boid])
+
+    random.shuffle(launcher.games)
+    launcher.games.sort(key=lambda entry: entry["date"])
     
 def draw_graphic(surface, ox, oy, tile, anim, primary):
     graphic = tile["graphic"]
@@ -418,6 +448,7 @@ def recolor(surface, palette):
 
 launcher = Launcher()
 player = BitsyPlayer()
+index = {}
 
 def draw():
     gameDisplay.fill(BLK)
@@ -462,10 +493,7 @@ def game_loop():
     while not exit:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                if player.ended:
-                    exit = True
-                else: 
-                    player.ended = True
+                exit = True
             if event.type == pygame.KEYDOWN:
                 key = True
 

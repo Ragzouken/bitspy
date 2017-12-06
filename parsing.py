@@ -22,6 +22,8 @@ class BitsyParser:
                 self.parse_palette()
             elif self.check_line("ROOM "):
                 self.parse_room()
+            elif self.check_line("SET "):
+                self.parse_room_old()
             elif self.check_line("TIL "):
                 self.parse_tile()
             elif self.check_line("SPR "):
@@ -75,6 +77,21 @@ class BitsyParser:
     def parse_color(self):
         return [int(c) for c in self.take_split(",")]
 
+    def parse_room_old(self):
+        room = {
+            "id": "0",
+            "exits": [],
+            "endings": [],
+        }
+
+        _, room["palette"] = self.take_split(" ")
+        room["tilemap"] = [self.take_line() for y in xrange(0, 16)]
+
+        if self.check_line("WAL "):
+            room["walls"] = self.parse_room_walls()
+
+        self.add_object("rooms", room)
+
     def parse_room(self):
         room = {
             "exits": [],
@@ -83,7 +100,12 @@ class BitsyParser:
         }
 
         _, room["id"] = self.take_split(" ")
-        room["tilemap"] = [self.take_split(",") for y in xrange(0, 16)]
+        
+        if "," in self.peek_line():
+            room["tilemap"] = [self.take_split(",") for y in xrange(0, 16)]
+        else:
+            room["tilemap"] = [self.take_line() for y in xrange(0, 16)]
+
         room["name"] = self.parse_name()
 
         while not self.check_line("PAL") and not self.check_blank():
