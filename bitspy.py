@@ -21,6 +21,7 @@ pygame.init()
 pygame.mouse.set_visible(False)
 
 gameDisplay = pygame.display.set_mode(SCREEN)
+buffer = pygame.Surface((256, 256))
 
 pygame.display.set_caption('bitspy')
 
@@ -37,6 +38,10 @@ font = [pygame.Surface((6, 8)) for i in xrange(256)]
 arrow = pygame.Surface((5, 3))
 background = pygame.Surface((256, 256))
 background.fill(BGR)
+
+bg_inc = 255
+bg_src = [(x, y) for x in xrange(16) for y in xrange(16)]
+bg_dst = [(x, y) for x in xrange(16) for y in xrange(16)]
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
@@ -71,10 +76,12 @@ class Launcher:
                 self.row = (self.row - 1) % len(self.games)
                 player.ended = True
 
-        if self.row - self.offset >= self.ROWS_PER_PAGE - 4:
-            self.offset = min(self.offset + 4, len(self.games))
-        if self.row - self.offset <= 4:
-            self.offset = max(self.offset - 4, 0)
+        d = self.row - self.offset
+
+        if d >= self.ROWS_PER_PAGE - 4:
+            self.offset = min(self.row - self.ROWS_PER_PAGE + 4, len(self.games))
+        elif d <= 4:
+            self.offset = max(self.row - 4, 0)
 
         self.render_page()
 
@@ -83,13 +90,46 @@ class Launcher:
         row = self.row - self.offset
         self.selected = self.games[self.row]
 
+        select_rect = (0, row * 12 + 8, 256, 11)
+
         self.screen.blit(background, (0, 0))
-        self.screen.fill((64, 0, 0), (8, row * 12 + 8, 256, 10))
+        #self.screen.fill((96, 0, 0), )
+
+        if self.offset > 0:
+            text = self.games[self.offset - 1]["title"]
+            self.screen.fill(BLK, (8, -1 * 12 + 8, len(text) * 6 + 3, 11))
+            self.render_text(text, 8 + 1, -1 * 12 + 8 + 2)
+
+        i = self.ROWS_PER_PAGE
+        if self.offset+i < len(self.games):
+            text = self.games[self.offset+i]["title"]
+            self.screen.fill(BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
+            self.render_text(text, 8 + 1, i * 12 + 8 + 2)
 
         for i, entry in enumerate(chunk):
             text = entry["title"]
-            self.screen.fill(BLK, (8, i * 12 + 8, len(text) * 6 + 2, 10))
-            self.render_text(text, 8 + 1, i * 12 + 8 + 1)
+            self.screen.fill(BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
+            self.render_text(text, 8 + 1, i * 12 + 8 + 2)
+
+        info_x = 128
+        info_y = 256 - 44
+
+        if row >= self.ROWS_PER_PAGE // 2:
+            info_y = 8
+
+        #info_y = select_rect[1] - 44
+        #info_y = max(8, info_y)
+        #info_y = min(256 - 44, info_y)
+
+        buffer.fill((255, 255, 255, 255), select_rect)
+        buffer.blit(self.screen, select_rect[:2], select_rect, pygame.BLEND_SUB)
+        self.screen.blit(buffer, select_rect[:2], select_rect)
+
+        date = self.selected["date"].strftime("%Y/%m/%d")
+
+        self.screen.fill(BLK, (info_x, info_y, 128 - 8, 36))
+        self.render_text(self.selected["credit"], info_x + 8, info_y + 8)
+        self.render_text(date.ljust(16) + "-" + chr(16), info_x + 8, info_y + 8 + 12)
 
     def render_text(self, text, x, y):
         for i, c in enumerate(text):
@@ -540,12 +580,20 @@ def game_loop():
             if not player.ended:
                 player.direction_input(dir)
 
-                sx = random.randint(0, 15)
-                sy = random.randint(0, 15)
+                if not player.dialogue_lines:
+                    global bg_inc
+                    bg_inc = bg_inc + 1
+                    if (bg_inc > 255):
+                        bg_inc = 0
+                        random.shuffle(bg_src)
+                        random.shuffle(bg_dst)
 
-                background.blit(player.screen, 
-                                (sx * 16, sy * 16),
-                                (sx * 16, sy * 16, 16, 16))
+                    sx, sy = bg_src[bg_inc]
+                    dx, dy = bg_dst[bg_inc]
+
+                    background.blit(player.screen, 
+                                    (sx * 16, sy * 16),
+                                    (dx * 16, dy * 16, 16, 16))
             else:
                 launcher.direction_input(dir)
 

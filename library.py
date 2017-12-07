@@ -3,6 +3,7 @@ import os
 import json
 import urllib2
 import csv
+import webbrowser
 from datetime import datetime
 from StringIO import StringIO
 
@@ -44,7 +45,17 @@ if __name__ == "__main__":
         boid, release, title, author, url, jam, notes = row[:7]
 
         dest = os.path.join(root, "library", boid + ".bitsy.txt")
-        open(dest, "ab").write("")
+
+        file = open(dest, "rb")
+        if not file.read().strip() and notes != "no longer available":
+            webbrowser.open(url)
+            os.system(dest)
+            raw_input(title + ":")
+            file = open(dest, "rb")
+            data = file.read().replace(r'\"', r'"').replace(r"\n", "\n")
+            file.close()
+            print(len(data))
+            open(dest, "wb").write(data)
 
     """
     for row in reader:
