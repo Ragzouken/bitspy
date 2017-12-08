@@ -43,6 +43,8 @@ bg_inc = 255
 bg_src = [(x, y) for x in xrange(16) for y in xrange(16)]
 bg_dst = [(x, y) for x in xrange(16) for y in xrange(16)]
 
+pygame.key.set_repeat(1, 200)
+
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):

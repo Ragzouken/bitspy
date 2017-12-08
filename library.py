@@ -4,6 +4,7 @@ import json
 import urllib2
 import csv
 import webbrowser
+import traceback
 from datetime import datetime
 from StringIO import StringIO
 
@@ -28,34 +29,78 @@ def read_index(file):
 
     return index
 
-if __name__ == "__main__":
-    root = os.path.dirname(__file__)
+def download(index):
+    for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
+        dest = os.path.join(root, "library", "%s.bitsy.txt" % entry["boid"])
 
-    url = r"http://api.github.com/gists/1b7cc99139948d1f908962e4ef39b7fb"
-    url = r"https://docs.google.com/spreadsheets/d/1eBUgCYOnMJ9REHuZdTodc6Ft2Vs6JXbH4K-bIgL9TPc/gviz/tq?tqx=out:csv&sheet=Bitsy"
-    #data = json.load(urllib2.urlopen(url))
+        blank = True
 
-    content = urllib2.urlopen(url).read()
-    open(os.path.join(root, "library", "index.txt"), "wb").write(content)
+        try:
+            file = open(dest, "rb")
+            blank = len(file.read().strip()) == 0
+            file.close()
+        except Exception as e:
+            print(e)
 
-    reader = csv.reader(StringIO(content))
-    reader.next()
-
-    for row in reader:
-        boid, release, title, author, url, jam, notes = row[:7]
-
-        dest = os.path.join(root, "library", boid + ".bitsy.txt")
-
-        file = open(dest, "rb")
-        if not file.read().strip() and notes != "no longer available":
-            webbrowser.open(url)
+        if blank and entry["notes"] != "no longer available":
+            file = open(dest, "ab+")
+            file.close()
             os.system(dest)
-            raw_input(title + ":")
+            webbrowser.open(entry["url"])
+            raw_input(entry["title"] + ":")
             file = open(dest, "rb")
             data = file.read().replace(r'\"', r'"').replace(r"\n", "\n")
             file.close()
             print(len(data))
             open(dest, "wb").write(data)
+
+def validate(index):
+    from parsing import BitsyParser
+
+    for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
+        try:
+            dest = os.path.join(root, "library", "%s.bitsy.txt" % entry["boid"])
+
+            with open(dest, "rb") as file:
+                data = file.read().replace("\r\n", "\n")
+                lines = data.split("\n")
+                parser = BitsyParser(lines)
+                parser.parse(silent = True)
+        except Exception as e:
+            print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
+            traceback.print_exc()
+
+if __name__ == "__main__":
+    root = os.path.dirname(__file__)
+
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('--update', '-u', dest='update', action='store_true',
+                        help='update the list of known bitsy games from the online omnibus')
+    parser.add_argument('--validate', '-v', dest='validate', action='store_true',
+                        help='try to parse all stored gamedata to find problems')
+    parser.add_argument('--download', '-d', dest='download', action='store_true',
+                        help='semi-automated download process for missing games')
+
+    args = parser.parse_args()
+    
+    index = os.path.join(root, "library", "index.txt")
+    content = open(index, "r+").read()
+
+    if args.update:
+        print("updating index...")
+        url = r"https://docs.google.com/spreadsheets/d/1eBUgCYOnMJ9REHuZdTodc6Ft2Vs6JXbH4K-bIgL9TPc/gviz/tq?tqx=out:csv&sheet=Bitsy"
+        content = urllib2.urlopen(url).read()
+        open(index, "wb").write(content)
+
+    index = read_index(StringIO(content))
+
+    if args.validate:
+        validate(index)
+
+    if args.download:
+        download(index)
 
     """
     for row in reader:

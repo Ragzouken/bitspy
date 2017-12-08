@@ -14,7 +14,7 @@ class BitsyParser:
     def add_object(self, type, object):
         self.world[type][object["id"]] = object
 
-    def parse(self):
+    def parse(self, silent = False):
         self.world["title"] = self.take_line()
 
         while self.index < len(self.lines):
@@ -33,7 +33,7 @@ class BitsyParser:
             elif self.check_line("END "):
                 self.parse_ending()
             else:
-                self.skip_line()
+                self.skip_line(silent)
 
         self.repair()
 
@@ -47,10 +47,10 @@ class BitsyParser:
         self.index += 1
         return line
 
-    def skip_line(self):
+    def skip_line(self, silent = False):
         line = self.take_line()
 
-        if line.strip():
+        if line.strip() and not silent:
             print("skipping: " + line)
 
     def peek_line(self):
@@ -62,8 +62,8 @@ class BitsyParser:
     def check_blank(self):
         return len(self.peek_line().strip()) == 0
 
-    def take_split(self, delimiter):
-        return self.take_line().split(delimiter)
+    def take_split(self, delimiter, limit = -1):
+        return self.take_line().split(delimiter, limit)
 
     def parse_palette(self):
         palette = {}
@@ -162,7 +162,7 @@ class BitsyParser:
     def parse_tile(self):
         tile = {}
 
-        _, tile["id"] = self.take_split(" ")
+        _, tile["id"] = self.take_split(" ", 1)
         tile["graphic"] = self.parse_graphic()
         tile["name"] = self.parse_name()
 
