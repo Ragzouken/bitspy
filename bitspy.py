@@ -313,14 +313,14 @@ class BitsyPlayer:
     def advance_dialogue(self):
         if self.skip_dialogue():
             return
-
-        if self.ending:
-            self.ended = True
-
+        
         self.dialogue_lines = self.dialogue_lines[2:]
 
         if not self.dialogue_lines:
             self.starting = False
+
+            if self.ending:
+                self.ended = True
 
         self.dialog.fill(BLK)
         self.dialogue_char = 0
