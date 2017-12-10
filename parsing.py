@@ -50,8 +50,8 @@ class BitsyParser:
     def skip_line(self, silent = False):
         line = self.take_line()
 
-        if line.strip() and not silent:
-            print("skipping: " + line)
+        #if line.strip() and not silent:
+        #    print("skipping: " + line)
 
     def peek_line(self):
         return self.lines[self.index]
@@ -97,6 +97,7 @@ class BitsyParser:
         room = {
             "exits": [],
             "endings": [],
+            "walls": [],
             "palette": "0",
         }
 
@@ -117,8 +118,7 @@ class BitsyParser:
             elif self.check_line("END "):
                 room["endings"].append(self.parse_room_ending())
             else:
-                print("skipping " + self.peek_line())
-                self.take_line()
+                self.skip_line()
 
         if self.check_line("PAL"):
             _, room["palette"] = self.take_split(" ")

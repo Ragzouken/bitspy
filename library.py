@@ -8,6 +8,7 @@ import webbrowser
 import traceback
 from datetime import datetime
 from StringIO import StringIO
+from parsing import BitsyParser
 
 def read_index(file):
     index = {}
@@ -56,8 +57,6 @@ def download(index):
             open(dest, "wb").write(data)
 
 def validate(index):
-    from parsing import BitsyParser
-
     for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
         try:
             dest = os.path.join(root, "library", "%s.bitsy.txt" % entry["boid"])
@@ -71,6 +70,106 @@ def validate(index):
             print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
             traceback.print_exc()
 
+def median(lst):
+    n = len(lst)
+    if n < 1:
+        return None
+    if n % 2 == 1:
+        return sorted(lst)[n//2]
+    else:
+        return sum(sorted(lst)[n//2-1:n//2+1])/2.0
+
+def mode(lst):
+    n = {}
+
+    for v in lst:
+        if not v in n:
+            n[v] = 1
+        else:
+            n[v] += 1
+
+    tiles = n.keys()
+    tiles.sort(key = lambda x: n[x])
+
+    return tiles[-1]
+
+def world_contains_frame(world, frame):
+    for tile in world["tiles"].itervalues():
+        if graphic_contains_frame(tile["graphic"], frame):
+            return True
+
+    for sprite in world["sprites"].itervalues():
+        if graphic_contains_frame(sprite["graphic"], frame):
+            return True
+
+    return False
+
+def graphic_contains_frame(graphic, frame):
+    for i in xrange(len(graphic)):
+        f = graphic[i]
+
+        match = True
+
+        for y, row in enumerate(frame):
+            for x, value in enumerate(row):
+                if f[y][x] != value:
+                    match = False
+                    break
+
+    return match
+
+def get_avatar():
+    pass
+
+def get_cat():
+    dest = os.path.join(root, "library", "%s.bitsy.txt" % "0FF04B41")
+
+    with open(dest, "rb") as file:
+        data = file.read().replace("\r\n", "\n")
+        lines = data.split("\n")
+        parser = BitsyParser(lines)
+        parser.parse(silent = True)
+        return parser.world["sprites"]["C"]["graphic"][0]
+
+def stats(index):
+    values = []
+
+    target = "endings"
+    cat = get_cat()
+
+    for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
+        try:
+            dest = os.path.join(root, "library", "%s.bitsy.txt" % entry["boid"])
+
+            with open(dest, "rb") as file:
+                data = file.read().replace("\r\n", "\n")
+                lines = data.split("\n")
+                parser = BitsyParser(lines)
+                parser.parse(silent = True)
+                if len(parser.world[target]) > 0:
+                   values.append(len(parser.world[target]))
+                #if len(parser.world["tiles"]) > 0:
+                #    values.append(world_contains_frame(parser.world, cat))
+        except Exception as e:
+            print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
+            traceback.print_exc()
+
+    total = sum(1 if inc else 0 for inc in values)
+
+    print("%s games, %s of which contain the bitsy cat (%s%%)" % (len(values), total, 100 * total / len(values)))
+
+    """
+    print("%s games total %s %s\nmin: %s\nmax: %s\nmean: %s\nmode: %s\nmedian: %s" % (
+        len(values), 
+        sum(values), 
+        target,
+        min(values),
+        max(values),
+        sum(values) / len(values), 
+        mode(values), 
+        median(values)))
+    """
+
 if __name__ == "__main__":
     root = os.path.dirname(__file__)
 
@@ -83,6 +182,8 @@ if __name__ == "__main__":
                         help='try to parse all stored gamedata to find problems')
     parser.add_argument('--download', '-d', dest='download', action='store_true',
                         help='semi-automated download process for missing games')
+    parser.add_argument('--stats', '-s', dest='stats', action='store_true',
+                        help='some stats')
 
     args = parser.parse_args()
     
@@ -102,6 +203,9 @@ if __name__ == "__main__":
 
     if args.download:
         download(index)
+
+    if args.stats:
+        stats(index)
 
     """
     for row in reader:

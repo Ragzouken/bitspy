@@ -297,8 +297,6 @@ class BitsyPlayer:
 
                 surface.blit(self.renders["tile_" + id][frame], (x * 16, y * 16))
 
-                #draw_graphic(surface, x, y, tile, frame, 1)
-
         for sprite in self.world["sprites"].values():
             if sprite["id"] != "A" and sprite["room"] == room["id"]:
                 surface.blit(self.renders["sprite_" + sprite["id"]][frame], (sprite["x"] * 16, sprite["y"] * 16))
@@ -434,15 +432,6 @@ def load_game():
 
     random.shuffle(launcher.games)
     launcher.games.sort(key=lambda entry: entry["date"])
-    
-def draw_graphic(surface, ox, oy, tile, anim, primary):
-    graphic = tile["graphic"]
-    frame = graphic[anim % len(graphic)]
-
-    for y in xrange(0, 8):
-        for x in xrange(0, 8):
-            color = primary if frame[y][x] else 0
-            pygame.draw.rect(surface, color, [x * 2 + ox * 16, y * 2 + oy * 16, 2, 2])
 
 def render(graphic, primary):
     renders = [pygame.Surface((16, 16)), pygame.Surface((16, 16))]
@@ -492,6 +481,58 @@ launcher = Launcher()
 player = BitsyPlayer()
 index = {}
 
+def get_avatars():
+    size = 21
+    page1 = pygame.Surface((size * (8 * 2 + 1) + 1, size * (8 * 2 + 1) + 1))
+    page2 = pygame.Surface((size * (8 * 2 + 1) + 1, size * (8 * 2 + 1) + 1))
+    root = os.path.dirname(__file__)
+    values1 = []
+    values2 = []
+
+    for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
+        try:
+            dest = os.path.join(root, "library", "%s.bitsy.txt" % entry["boid"])
+
+            with open(dest, "rb") as file:
+                data = file.read().replace("\r\n", "\n")
+                lines = data.split("\n")
+                parser = BitsyParser(lines)
+                parser.parse(silent = True)
+                if len(parser.world["tiles"]) > 0:
+                    frame1 = render(parser.world["sprites"]["A"]["graphic"], SPR)[0]
+                    frame2 = render(parser.world["sprites"]["A"]["graphic"], SPR)[1]
+                    recolor(frame1, parser.world["palettes"]["0"]["colors"])
+                    recolor(frame2, parser.world["palettes"]["0"]["colors"])
+                    values1.append(frame1)
+                    values2.append(frame2)
+                #if len(parser.world["tiles"]) > 0:
+                #    values.append(world_contains_frame(parser.world, cat))
+        except Exception as e:
+            print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
+            traceback.print_exc()
+
+    for y in xrange(size):
+        for x in xrange(size):
+            if y * size + x >= len(values1):
+                break
+            page1.blit(values1[y * size + x], (x * (8 * 2 + 1) + 1, y * (8 * 2 + 1) + 1))
+            page2.blit(values2[y * size + x], (x * (8 * 2 + 1) + 1, y * (8 * 2 + 1) + 1))
+
+    pygame.image.save(page1, "avatars1.png")
+    pygame.image.save(page2, "avatars2.png")
+
+    """
+    print("%s games total %s %s\nmin: %s\nmax: %s\nmean: %s\nmode: %s\nmedian: %s" % (
+        len(values), 
+        sum(values), 
+        target,
+        min(values),
+        max(values),
+        sum(values) / len(values), 
+        mode(values), 
+        median(values)))
+    """
+
 def draw():
     gameDisplay.fill(BLK)
 
@@ -531,6 +572,8 @@ def game_loop():
     anim = 0
 
     launcher.render_page()
+
+    #get_avatars()
 
     while not exit:
         for event in pygame.event.get():
