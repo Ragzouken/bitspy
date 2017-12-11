@@ -15,6 +15,7 @@ SCREEN = (480, 272)
 ALIGN = "LEFT" # "LEFT" "CENTER" "RIGHT"
 ROTATE = 0 # 0 1 2 3
 TEXT_DELAY = 50 #ms
+ARROW_KEYS = [pygame.K_KP2, pygame.K_KP5, pygame.K_KP8, pygame.K_KP6]
 ##########
 
 pygame.init()
@@ -482,9 +483,13 @@ player = BitsyPlayer()
 index = {}
 
 def get_avatars():
-    size = 21
-    page1 = pygame.Surface((size * (8 * 2 + 1) + 1, size * (8 * 2 + 1) + 1))
-    page2 = pygame.Surface((size * (8 * 2 + 1) + 1, size * (8 * 2 + 1) + 1))
+    width = 35
+    height = 13
+
+    gap = 0
+
+    page1 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
+    page2 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
     root = os.path.dirname(__file__)
     values1 = []
     values2 = []
@@ -511,12 +516,12 @@ def get_avatars():
             print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
             traceback.print_exc()
 
-    for y in xrange(size):
-        for x in xrange(size):
-            if y * size + x >= len(values1):
+    for y in xrange(height):
+        for x in xrange(width):
+            if y * width + x >= len(values1):
                 break
-            page1.blit(values1[y * size + x], (x * (8 * 2 + 1) + 1, y * (8 * 2 + 1) + 1))
-            page2.blit(values2[y * size + x], (x * (8 * 2 + 1) + 1, y * (8 * 2 + 1) + 1))
+            page1.blit(values1[y * width + x], (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap))
+            page2.blit(values2[y * width + x], (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap))
 
     pygame.image.save(page1, "avatars1.png")
     pygame.image.save(page2, "avatars2.png")
@@ -563,6 +568,8 @@ def clear_screen():
     gameDisplay.fill(BLK)
     pygame.display.update()
 
+
+
 def game_loop():
     global ROTATE, ALIGN
 
@@ -582,7 +589,13 @@ def game_loop():
             if event.type == pygame.KEYDOWN:
                 key = True
 
-                if event.key == pygame.K_LEFT:
+                for i, key in enumerate(ARROW_KEYS):
+                    if event.key == key:
+                        dir = i
+
+                if event.key == pygame.K_BACKSPACE:
+                    player.ended = True
+                elif event.key == pygame.K_LEFT:
                     dir = 2
                 elif event.key == pygame.K_RIGHT:
                     dir = 0
@@ -619,8 +632,8 @@ def game_loop():
                     clear_screen()
 
         if anim % 3 == 0 and key:
-            if dir >= 0:
-                dir = (dir - ROTATE) % 4
+            #if dir >= 0:
+            #    dir = (dir - ROTATE) % 4
             
             if not player.ended:
                 player.direction_input(dir)
