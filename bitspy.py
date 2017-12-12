@@ -370,12 +370,7 @@ class BitsyPlayer:
                 next = 0
 
                 while next < len(words):
-                    if len(words[next]) > limit:
-                        space = limit - 1 - len(row)
-                        rows.append(line[:left])
-                        words[next] = line[left:]
-                        next -= 1
-                    elif len(row) + 1 + len(words[next]) > limit:
+                    if len(row) + 1 + len(words[next]) > limit:
                         rows.append(row)
                         row = words[next]
                     elif row:
