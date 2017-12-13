@@ -14,7 +14,7 @@ from library import read_index
 # CONFIG #
 SCREEN = (480, 272)
 ALIGN = "LEFT" # "LEFT" "CENTER" "RIGHT"
-ROTATE = 0 # 0 1 2 3
+ROTATE = 2 # 0 1 2 3
 TEXT_DELAY = 50 #ms
 ARROW_KEYS = [pygame.K_KP2, pygame.K_KP5, pygame.K_KP8, pygame.K_KP6]
 MENU_KEY = pygame.K_BACKSPACE
