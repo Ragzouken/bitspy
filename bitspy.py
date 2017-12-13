@@ -16,6 +16,8 @@ ALIGN = "LEFT" # "LEFT" "CENTER" "RIGHT"
 ROTATE = 0 # 0 1 2 3
 TEXT_DELAY = 50 #ms
 ARROW_KEYS = [pygame.K_KP2, pygame.K_KP5, pygame.K_KP8, pygame.K_KP6]
+MENU_KEY = pygame.K_BACKSPACE
+DEBUG_KEY = pygame.K_KP_PLUS
 ##########
 
 pygame.init()
@@ -57,12 +59,13 @@ def chunk(l, n, i):
 class Launcher:
     ROWS_PER_PAGE = 20
 
-    def __init__(self):
+    def __init__(self, screen = None):
+        self.debug = False
         self.page = 0
         self.row = 0
         self.offset = 0
         self.games = []
-        self.screen = pygame.Surface((256, 256))
+        self.screen = screen if screen is not None else pygame.Surface((256, 256))
         self.selected = ""
 
     def direction_input(self, direction):
@@ -588,8 +591,10 @@ def game_loop():
                     if event.key == key:
                         dir = i
 
-                if event.key == pygame.K_BACKSPACE:
+                if event.key == MENU_KEY:
                     player.ended = True
+                elif event.key == DEBUG_KEY:
+                    launcher.debug = not launcher.debug
                 elif event.key == pygame.K_LEFT:
                     dir = 2
                 elif event.key == pygame.K_RIGHT:
