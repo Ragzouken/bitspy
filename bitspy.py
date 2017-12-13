@@ -3,6 +3,7 @@ from time import sleep
 import random
 import glob
 import urllib2
+import sys
 import os
 import csv
 import traceback
@@ -47,6 +48,13 @@ bg_src = [(x, y) for x in xrange(16) for y in xrange(16)]
 bg_dst = [(x, y) for x in xrange(16) for y in xrange(16)]
 
 pygame.key.set_repeat(1, 200)
+
+def restart_program():
+    """Restarts the current program.
+    Note: this function does not return. Any cleanup action (like
+    saving data) must be done before calling this function."""
+    python = sys.executable
+    os.execl(python, python, * sys.argv)
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
@@ -566,10 +574,10 @@ def clear_screen():
     gameDisplay.fill(BLK)
     pygame.display.update()
 
-
+RESTART = False
 
 def game_loop():
-    global ROTATE, ALIGN
+    global ROTATE, ALIGN, RESTART
 
     dir = -1
     key = False
@@ -594,7 +602,10 @@ def game_loop():
                 if event.key == MENU_KEY:
                     player.ended = True
                 elif event.key == DEBUG_KEY:
-                    launcher.debug = not launcher.debug
+                    from subprocess import call
+                    call(["bash", "update.sh"])
+                    exit = True
+                    RESTART = True
                 elif event.key == pygame.K_LEFT:
                     dir = 2
                 elif event.key == pygame.K_RIGHT:
@@ -675,3 +686,7 @@ if __name__ == "__main__":
     load_game()
     #launcher.render_page()
     game_loop()
+
+    if RESTART:
+        print("RESTARTING")
+        restart_program()
