@@ -79,16 +79,20 @@ class Launcher:
 
         self.author = None
         self.saved_row = 0
+        self.saved_offset = 0
 
     def menu_input(self):
         if self.author is not None:
             self.author = None
             self.row = self.saved_row
+            self.offset = self.saved_offset
             self.subset = self.games
         else:
             self.author = self.selected["credit"]
             self.saved_row = self.row
+            self.saved_offset = self.offset
             self.row = 0
+            self.offset = 0
             self.subset = [game for game in self.games if game["credit"] == self.author]
 
         self.render_page()
