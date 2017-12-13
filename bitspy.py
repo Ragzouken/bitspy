@@ -73,14 +73,31 @@ class Launcher:
         self.row = 0
         self.offset = 0
         self.games = []
+        self.subset = []
         self.screen = screen if screen is not None else pygame.Surface((256, 256))
         self.selected = ""
 
+        self.author = None
+        self.saved_row = 0
+
+    def menu_input(self):
+        if self.author is not None:
+            self.author = None
+            self.row = self.saved_row
+            self.subset = self.games
+        else:
+            self.author = self.selected["credit"]
+            self.saved_row = self.row
+            self.row = 0
+            self.subset = [game for game in self.games if game["credit"] == self.author]
+
+        self.render_page()
+
     def direction_input(self, direction):
         if direction == 3:
-            self.row = (self.row - 1) % len(self.games)
+            self.row = (self.row - 1) % len(self.subset)
         elif direction == 1:
-            self.row = (self.row + 1) % len(self.games)
+            self.row = (self.row + 1) % len(self.subset)
         elif direction == 0:
             try:
                 player.change_world(load_file(self.selected["boid"]))
@@ -93,16 +110,16 @@ class Launcher:
         d = self.row - self.offset
 
         if d >= self.ROWS_PER_PAGE - 4:
-            self.offset = min(self.row - self.ROWS_PER_PAGE + 4, len(self.games))
+            self.offset = min(self.row - self.ROWS_PER_PAGE + 4, len(self.subset))
         elif d <= 4:
             self.offset = max(self.row - 4, 0)
 
         self.render_page()
 
     def render_page(self):
-        chunk = self.games[self.offset:self.offset+self.ROWS_PER_PAGE]
+        chunk = self.subset[self.offset:self.offset+self.ROWS_PER_PAGE]
         row = self.row - self.offset
-        self.selected = self.games[self.row]
+        self.selected = self.subset[self.row]
 
         select_rect = (0, row * 12 + 8, 256, 11)
 
@@ -110,13 +127,13 @@ class Launcher:
         #self.screen.fill((96, 0, 0), )
 
         if self.offset > 0:
-            text = self.games[self.offset - 1]["title"]
+            text = self.subset[self.offset - 1]["title"]
             self.screen.fill(BLK, (8, -1 * 12 + 8, len(text) * 6 + 3, 11))
             self.render_text(text, 8 + 1, -1 * 12 + 8 + 2)
 
         i = self.ROWS_PER_PAGE
-        if self.offset+i < len(self.games):
-            text = self.games[self.offset+i]["title"]
+        if self.offset+i < len(self.subset):
+            text = self.subset[self.offset+i]["title"]
             self.screen.fill(BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
             self.render_text(text, 8 + 1, i * 12 + 8 + 2)
 
@@ -439,6 +456,7 @@ def load_game():
 
     random.shuffle(launcher.games)
     launcher.games.sort(key=lambda entry: entry["date"])
+    launcher.subset = launcher.games
 
 def render(graphic, primary):
     renders = [pygame.Surface((16, 16)), pygame.Surface((16, 16))]
@@ -600,7 +618,10 @@ def game_loop():
                         dir = i
 
                 if event.key == MENU_KEY:
-                    player.ended = True
+                    if not player.ended:
+                        player.ended = True
+                    else:
+                        launcher.menu_input()
                 elif event.key == DEBUG_KEY:
                     from subprocess import call
                     call(["bash", "update.sh"])
