@@ -593,7 +593,7 @@ def game_loop():
                         action = val
 
                 if action == "MENU":
-                    FOCUS.input(MENU, True)
+                    FOCUS.input(action, True)
                 elif action == "DEBUG":
                     from subprocess import call
                     call(["bash", os.path.join(ROOT, "update.sh")])
