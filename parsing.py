@@ -19,6 +19,9 @@ class BitsyParser:
         self.world[type][object["id"]] = object
 
     def parse(self, silent = False):
+        if not self.peek_line().strip():
+            self.take_line()
+
         self.world["title"] = self.take_line()
 
         while self.index < len(self.lines):
