@@ -21,6 +21,8 @@ MENU_KEY = pygame.K_BACKSPACE
 DEBUG_KEY = pygame.K_KP_PLUS
 ##########
 
+ROOT = os.path.dirname(__file__)
+
 pygame.init()
 pygame.mouse.set_visible(False)
 
@@ -628,7 +630,7 @@ def game_loop():
                         launcher.menu_input()
                 elif event.key == DEBUG_KEY:
                     from subprocess import call
-                    call(["bash", "update.sh"])
+                    call(["bash", os.path.join(ROOT, "update.sh")])
                     exit = True
                     RESTART = True
                 elif event.key == pygame.K_LEFT:

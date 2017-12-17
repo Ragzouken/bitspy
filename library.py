@@ -9,9 +9,10 @@ import traceback
 from datetime import datetime
 from StringIO import StringIO
 from parsing import BitsyParser
+from collections import OrderedDict
 
 def read_index(file):
-    index = {}
+    index = OrderedDict()
 
     reader = csv.reader(file)
     reader.next()
@@ -170,6 +171,16 @@ def stats(index):
         median(values)))
     """
 
+def get_version(entry):
+    dest = os.path.join(root, "library", "%s.bitsy.txt" % entry["boid"])
+
+    with open(dest, "rb") as f:
+        for line in f:
+            if line.startswith("# BITSY VERSION"):
+                return line.rsplit(" ", 1)[1].strip()
+
+    return "0"
+
 if __name__ == "__main__":
     root = os.path.dirname(__file__)
 
@@ -184,6 +195,8 @@ if __name__ == "__main__":
                         help='semi-automated download process for missing games')
     parser.add_argument('--stats', '-s', dest='stats', action='store_true',
                         help='some stats')
+    parser.add_argument('--versions', dest='versions', action='store_true',
+                        help='print all bitsy versions')
 
     args = parser.parse_args()
     
@@ -206,6 +219,10 @@ if __name__ == "__main__":
 
     if args.stats:
         stats(index)
+
+    if args.versions:
+        for entry in index.itervalues():
+            print("%s // %s" % (entry["title"], get_version(entry)))
 
     """
     for row in reader:
