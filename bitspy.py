@@ -129,18 +129,18 @@ class Launcher:
         if self.offset > 0:
             text = self.subset[self.offset - 1]["title"]
             self.screen.fill(RENDERER.BLK, (8, -1 * 12 + 8, len(text) * 6 + 3, 11))
-            RENDERER.render_text_to_surface(self.screen, text, 8 + 1, -1 * 12 + 8 + 2)
+            RENDERER.font.render_text_line(self.screen, text, 8 + 1, -1 * 12 + 8 + 2)
 
         i = self.ROWS_PER_PAGE
         if self.offset+i < len(self.subset):
             text = self.subset[self.offset+i]["title"]
             self.screen.fill(RENDERER.BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
-            RENDERER.render_text_to_surface(self.screen, text, 8 + 1, i * 12 + 8 + 2)
+            RENDERER.font.render_text_line(self.screen, text, 8 + 1, i * 12 + 8 + 2)
 
         for i, entry in enumerate(chunk):
             text = entry["title"]
             self.screen.fill(RENDERER.BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
-            RENDERER.render_text_to_surface(self.screen, text, 8 + 1, i * 12 + 8 + 2)
+            RENDERER.font.render_text_line(self.screen, text, 8 + 1, i * 12 + 8 + 2)
 
         info_x = 128
         info_y = 256 - 44
@@ -159,8 +159,8 @@ class Launcher:
         date = self.selected["date"].strftime("%Y/%m/%d")
 
         self.screen.fill(RENDERER.BLK, (info_x, info_y, 128 - 8, 36))
-        RENDERER.render_text_to_surface(self.screen, self.selected["credit"], info_x + 8, info_y + 8)
-        RENDERER.render_text_to_surface(self.screen, date.ljust(16) + "-" + chr(16), info_x + 8, info_y + 8 + 12)
+        RENDERER.font.render_text_line(self.screen, self.selected["credit"], info_x + 8, info_y + 8)
+        RENDERER.font.render_text_line(self.screen, date.ljust(16) + "-" + chr(16), info_x + 8, info_y + 8 + 12)
 
 class BitsyPlayer:
     def __init__(self):
@@ -407,7 +407,7 @@ class BitsyPlayer:
         y = self.dialogue_char // 32
 
         c = demo[self.dialogue_char]
-        self.dialog.blit(RENDERER.font[ord(c)], (xoff + x * 6, yoff + y * (8 + 4)))
+        self.dialog.blit(RENDERER.font.font[ord(c)], (xoff + x * 6, yoff + y * (8 + 4)))
 
         self.dialogue_char += 1 
         while self.dialogue_char < len(demo) and demo[self.dialogue_char].strip() == "":

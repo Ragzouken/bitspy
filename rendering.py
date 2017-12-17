@@ -1,5 +1,41 @@
 import pygame
 
+BLK = 0x000000
+WHT = 0xFFFFFF
+BGR = 0x999999
+TIL = 0xFF0000
+SPR = 0xFFFFFF
+
+def render_data_to_surface(surface, data, foreground, background):
+    pixels = pygame.PixelArray(surface)
+
+    for y, row in enumerate(data):
+        for x, char in enumerate(row):
+            pixels[x, y] = background if char == "0" else foreground
+
+    del pixels
+
+def recolor_surface(surface, palette):
+    pixels = pygame.PixelArray(surface)
+    pixels.replace(BGR, palette[0])
+    pixels.replace(TIL, palette[1])
+    pixels.replace(SPR, palette[2])
+    del pixels
+
+class BitsyFontRender:
+    def __init__(self):
+        self.font = [pygame.Surface((6, 8)) for i in xrange(256)]
+
+    def load_font(self, data):
+        sections = data.split("\n\n")
+
+        for i, section in enumerate(sections):
+            render_data_to_surface(self.font[i], section.split("\n"), WHT, BLK)
+
+    def render_text_line(self, surface, text, x, y):
+        for i, c in enumerate(text):
+            surface.blit(self.font[ord(c)], (i * 6 + x, y))
+
 class Renderer:
     BLK = 0x000000
     WHT = 0xFFFFFF
@@ -8,24 +44,13 @@ class Renderer:
     SPR = 0xFFFFFF
 
     def __init__(self):
-        self.font = [pygame.Surface((6, 8)) for i in xrange(256)]
+        self.font = BitsyFontRender()
         self.arrow = pygame.Surface((5, 3))
         self.renders = {}
 
     def load_font(self, data, arrow = "11111\n01110\n00100"):
-        sections = data.split("\n\n")
-
-        for i, section in enumerate(sections):
-            self.render_data_to_surface(self.font[i], section.split("\n"), self.WHT, self.BLK)
-
-        self.render_data_to_surface(self.arrow, arrow.split("\n"), self.WHT, self.BLK)
+        self.font.load_font(data)
         self.arrow = pygame.transform.scale(self.arrow, (10, 6))
-
-    def render_text_to_surface(self, surface, text, x, y, font = None):
-        font = self.font if font is None else font
-
-        for i, c in enumerate(text):
-            surface.blit(font[ord(c)], (i * 6 + x, y))
 
     def render_frame_to_surface(self,
                                 surface, 
@@ -38,22 +63,8 @@ class Renderer:
                 color = foreground if frame[y][x] else background
                 surface.fill(color, (x * scale, y * scale, scale, scale))
 
-    def render_data_to_surface(self,
-                               surface,
-                               data,
-                               foreground,
-                               background):
-        pixels = pygame.PixelArray(surface)
-
-        for y, row in enumerate(data):
-            for x, char in enumerate(row):
-                pixels[x, y] = background if char == "0" else foreground
-
     def recolor_surface(self, surface, palette):
-        pixels = pygame.PixelArray(surface)
-        pixels.replace(self.BGR, palette[0])
-        pixels.replace(self.TIL, palette[1])
-        pixels.replace(self.SPR, palette[2])
+        recolor_surface(surface, palette)
 
     def prerender_world(self, world):
         for item in world["items"].itervalues():
