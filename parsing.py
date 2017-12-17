@@ -7,6 +7,7 @@ class BitsyParser:
             "rooms": {},
             "tiles": {},
             "sprites": {},
+            "items": {},
             "dialogues": {},
             "endings": {},
         }
@@ -28,6 +29,8 @@ class BitsyParser:
                 self.parse_tile()
             elif self.check_line("SPR "):
                 self.parse_sprite()
+            elif self.check_line("ITM "):
+                self.parse_item()
             elif self.check_line("DLG "):
                 self.parse_dialogue()
             elif self.check_line("END "):
@@ -50,8 +53,8 @@ class BitsyParser:
     def skip_line(self, silent = False):
         line = self.take_line()
 
-        #if line.strip() and not silent:
-        #    print("skipping: " + line)
+        if line.strip() and not silent:
+            print("skipping: " + line)
 
     def peek_line(self):
         return self.lines[self.index]
@@ -81,8 +84,10 @@ class BitsyParser:
         room = {
             "id": "0",
             "exits": [],
+            "links": {},
             "endings": [],
             "walls": [],
+            "items": [],
         }
 
         _, room["palette"] = self.take_split(" ")
@@ -96,8 +101,10 @@ class BitsyParser:
     def parse_room(self):
         room = {
             "exits": [],
+            "links": {},
             "endings": [],
             "walls": [],
+            "items": [],
             "palette": "0",
         }
 
@@ -117,6 +124,10 @@ class BitsyParser:
                 room["walls"] = self.parse_room_walls()
             elif self.check_line("END "):
                 room["endings"].append(self.parse_room_ending())
+            elif self.check_line("ITM "):
+                room["items"].append(self.parse_room_item())
+            elif self.check_line("LNK "):
+                self.parse_room_link(room["links"])
             else:
                 self.skip_line()
 
@@ -138,6 +149,11 @@ class BitsyParser:
 
         return exit
 
+    def parse_room_link(self, links):
+        _, dir, room = self.take_split(" ")
+
+        links[dir] = room
+
     def parse_room_ending(self):
         ending = {}
 
@@ -150,6 +166,14 @@ class BitsyParser:
         _, row = self.take_split(" ")
 
         return row.split(",")
+
+    def parse_room_item(self):
+        item = {}
+
+        _, item["id"], pos = self.take_split(" ")
+        item["x"], item["y"] = (int(c) for c in pos.split(","))
+
+        return item
 
     def parse_ending(self):
         ending = {}
@@ -186,7 +210,24 @@ class BitsyParser:
             _, sprite["room"], pos = self.take_split(" ") 
             sprite["x"], sprite["y"] = (int(c) for c in pos.split(","))
 
+        if self.check_line("ITM "):
+            self.skip_line()
+
         self.add_object("sprites", sprite)
+
+    def parse_item(self):
+        item = {}
+
+        #print(self.peek_line())
+
+        _, item["id"] = self.take_split(" ")
+        item["graphic"] = self.parse_graphic()
+        item["name"] = self.parse_name()
+
+        if self.check_line("DLG "):
+            _, item["dialogue"] = self.take_line().split(" ", 1)
+
+        self.add_object("items", item)
 
     def parse_dialogue(self):
         dialogue = {

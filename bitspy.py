@@ -213,22 +213,41 @@ class BitsyPlayer:
         self.avatar_x = self.world["sprites"]["A"]["x"]
         self.avatar_y = self.world["sprites"]["A"]["y"]
 
-        self.set_room(self.world["rooms"][self.world["sprites"]["A"]["room"]])
+        self.set_room(self.world["sprites"]["A"]["room"])
 
         self.generate_dialogue(self.world["title"])
+
+    def get_room_from_id(self, id):
+        return self.world["rooms"][id]
 
     def direction_input(self, direction):
         if self.dialogue_lines:
             self.advance_dialogue()
         else:
             if direction == 2:
-                self.move_into(max(0, self.avatar_x - 1), self.avatar_y)
+                if self.avatar_x == 0 and "L" in self.avatar_room["links"]:
+                    self.avatar_x = 15
+                    self.set_room(self.avatar_room["links"]["L"])
+                else:
+                    self.move_into(max(0, self.avatar_x - 1), self.avatar_y)
             elif direction == 0:
-                self.move_into(min(15, self.avatar_x + 1), self.avatar_y)
+                if self.avatar_x == 15 and "R" in self.avatar_room["links"]:
+                    self.avatar_x = 0
+                    self.set_room(self.avatar_room["links"]["R"])
+                else:
+                    self.move_into(min(15, self.avatar_x + 1), self.avatar_y)
             elif direction == 3:
-                self.move_into(self.avatar_x, max(0, self.avatar_y - 1))
+                if self.avatar_y == 0 and "U" in self.avatar_room["links"]:
+                    self.avatar_y = 15
+                    self.set_room(self.avatar_room["links"]["U"])
+                else:
+                    self.move_into(self.avatar_x, max(0, self.avatar_y - 1))
             elif direction == 1:
-                self.move_into(self.avatar_x, min(15, self.avatar_y + 1))
+                if self.avatar_y == 15 and "D" in self.avatar_room["links"]:
+                    self.avatar_y = 0
+                    self.set_room(self.avatar_room["links"]["D"])
+                else:
+                    self.move_into(self.avatar_x, min(15, self.avatar_y + 1))
 
         self.draw(self.prev_frame)
 
@@ -273,7 +292,7 @@ class BitsyPlayer:
 
         self.avatar_x = dest["x"]
         self.avatar_y = dest["y"]
-        self.set_room(self.world["rooms"][dest["room"]])
+        self.set_room(dest["room"])
 
     def use_ending(self, ending):
         self.generate_dialogue(self.world["endings"][ending["id"]]["text"])
@@ -338,7 +357,9 @@ class BitsyPlayer:
 
         recolor(surface, self.palette)
 
-    def set_room(self, room):
+    def set_room(self, id):
+        room = self.get_room_from_id(id)
+
         self.avatar_room = room
         self.palette = self.world["palettes"][room["palette"]]["colors"]
         self.pre_render_room()
@@ -422,9 +443,8 @@ class BitsyPlayer:
         self.dialogue_lines.extend(rows)
 
 def load_file(name):
-    root = os.path.dirname(__file__)
-    file = os.path.join(root, "games", name + ".bitsy.txt")
-    music = os.path.join(root, "games", name + ".ogg")
+    file = os.path.join(ROOT, "games", name + ".bitsy.txt")
+    music = os.path.join(ROOT, "games", name + ".ogg")
 
     with open(file, "rb") as file:
         data = file.read().replace("\r\n", "\n")
@@ -447,11 +467,10 @@ def load_game():
 
     data = ""
 
-    root = os.path.dirname(__file__)
-    search = os.path.join(root, "games", "*.bitsy.txt")
+    search = os.path.join(ROOT, "games", "*.bitsy.txt")
 
     global index
-    index = read_index(open(os.path.join(root, "games", "index.txt"), "rb"))
+    index = read_index(open(os.path.join(ROOT, "games", "index.txt"), "rb"))
 
     for file in glob.glob(search):
         path, filename = os.path.split(file)
@@ -479,9 +498,7 @@ def render_font():
     global arrow
     data = ""
 
-    root = os.path.dirname(__file__)
-
-    with open(os.path.join(root, "font.txt"), "rb") as file:
+    with open(os.path.join(ROOT, "font.txt"), "rb") as file:
         data = file.read().replace("\r\n", "\n")
 
     sections = data.split("\n\n")
@@ -520,13 +537,13 @@ def get_avatars():
 
     page1 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
     page2 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
-    root = os.path.dirname(__file__)
+
     values1 = []
     values2 = []
 
     for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
         try:
-            dest = os.path.join(root, "library", "%s.bitsy.txt" % entry["boid"])
+            dest = os.path.join(ROOT, "library", "%s.bitsy.txt" % entry["boid"])
 
             with open(dest, "rb") as file:
                 data = file.read().replace("\r\n", "\n")
