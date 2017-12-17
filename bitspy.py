@@ -572,7 +572,7 @@ def switch_focus(thing):
 def game_loop():
     global ROTATE, ALIGN, RESTART
 
-    action = -1
+    action = None
     pressed = False
     exit = False
     anim = 0
@@ -592,6 +592,8 @@ def game_loop():
                     if event.key == key:
                         action = val
 
+                used = True
+
                 if action == "MENU":
                     FOCUS.input(action, True)
                 elif action == "DEBUG":
@@ -610,6 +612,11 @@ def game_loop():
                 elif action == "ALIGN":
                     ALIGN = (ALIGN + 1) % 3
                     clear_screen()
+                else:
+                    used = False
+
+                if used:
+                    action = None
 
         if anim % 3 == 0:
             down = pygame.key.get_pressed()
@@ -623,7 +630,7 @@ def game_loop():
             if not player.ended and not player.dialogue_lines:
                 capture_bg()
 
-            action = -1
+            action = None
             pressed = False
 
         if not player.ended:
