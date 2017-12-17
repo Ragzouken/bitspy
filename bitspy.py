@@ -706,19 +706,19 @@ def game_loop():
             #if dir >= 0:
             #    dir = (dir - ROTATE) % 4
             
-            pressed = pygame.key.get_pressed()
+            down = pygame.key.get_pressed()
 
-            if pressed[pygame.K_RIGHT]:
+            if down[pygame.K_RIGHT]:
                 dir = 0
-            elif pressed[pygame.K_DOWN]:
+            elif down[pygame.K_DOWN]:
                 dir = 1
-            elif pressed[pygame.K_LEFT]:
+            elif down[pygame.K_LEFT]:
                 dir = 2
-            elif pressed[pygame.K_UP]:
+            elif down[pygame.K_UP]:
                 dir = 3
 
             for i, key in enumerate(ARROW_KEYS):
-                if pressed[key]:
+                if down[key]:
                     dir = i
 
             if not player.ended:
