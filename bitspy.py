@@ -49,8 +49,6 @@ bg_inc = 255
 bg_src = [(x, y) for x in xrange(16) for y in xrange(16)]
 bg_dst = [(x, y) for x in xrange(16) for y in xrange(16)]
 
-pygame.key.set_repeat(1, 200)
-
 def restart_program():
     """Restarts the current program.
     Note: this function does not return. Any cleanup action (like
@@ -704,11 +702,22 @@ def game_loop():
                     ALIGN = "RIGHT"
                     clear_screen()
 
-        if anim % 3 == 0 and key:
+        if anim % 3 == 0:
             #if dir >= 0:
             #    dir = (dir - ROTATE) % 4
             
-            if not player.ended:
+            pressed = pygame.key.get_pressed()
+
+            if pressed[pygame.K_RIGHT]:
+                dir = 0
+            elif pressed[pygame.K_DOWN]:
+                dir = 1
+            elif pressed[pygame.K_LEFT]:
+                dir = 2
+            elif pressed[pygame.K_UP]:
+                dir = 3
+
+            if not player.ended and dir >= 0:
                 player.direction_input(dir)
 
                 if not player.dialogue_lines:
