@@ -717,6 +717,10 @@ def game_loop():
             elif pressed[pygame.K_UP]:
                 dir = 3
 
+            for i, key in enumerate(ARROW_KEYS):
+                if pressed[key]:
+                    dir = i
+
             if not player.ended:
                 player.direction_input(dir, key)
 
