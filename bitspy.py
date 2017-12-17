@@ -627,7 +627,7 @@ def game_loop():
 
             FOCUS.input(action, pressed)
 
-            if not player.ended and not player.dialogue_lines:
+            if FOCUS == player and not player.dialogue_lines and action is not None:
                 capture_bg()
 
             action = None
