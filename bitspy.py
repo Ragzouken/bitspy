@@ -509,73 +509,9 @@ def render(graphic, primary):
 
     return renders
 
-def render_font():
-    data = ""
-
-    with open(os.path.join(ROOT, "font.txt"), "rb") as file:
-        data = file.read().replace("\r\n", "\n")
-
-    RENDERER.load_font(data)
-
 launcher = Launcher()
 player = BitsyPlayer()
 index = {}
-
-def get_avatars():
-    width = 35
-    height = 13
-
-    gap = 0
-
-    page1 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
-    page2 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
-
-    values1 = []
-    values2 = []
-
-    for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
-        try:
-            dest = os.path.join(ROOT, "library", "%s.bitsy.txt" % entry["boid"])
-
-            with open(dest, "rb") as file:
-                data = file.read().replace("\r\n", "\n")
-                lines = data.split("\n")
-                parser = BitsyParser(lines)
-                parser.parse(silent = True)
-                if len(parser.world["tiles"]) > 0:
-                    frame1 = render(parser.world["sprites"]["A"]["graphic"], RENDERER.SPR)[0]
-                    frame2 = render(parser.world["sprites"]["A"]["graphic"], RENDERER.SPR)[1]
-                    RENDERER.recolor_surface(frame1, parser.world["palettes"]["0"]["colors"])
-                    RENDERER.recolor_surface(frame2, parser.world["palettes"]["0"]["colors"])
-                    values1.append(frame1)
-                    values2.append(frame2)
-                #if len(parser.world["tiles"]) > 0:
-                #    values.append(world_contains_frame(parser.world, cat))
-        except Exception as e:
-            print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
-            traceback.print_exc()
-
-    for y in xrange(height):
-        for x in xrange(width):
-            if y * width + x >= len(values1):
-                break
-            page1.blit(values1[y * width + x], (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap))
-            page2.blit(values2[y * width + x], (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap))
-
-    pygame.image.save(page1, "avatars1.png")
-    pygame.image.save(page2, "avatars2.png")
-
-    """
-    print("%s games total %s %s\nmin: %s\nmax: %s\nmean: %s\nmode: %s\nmedian: %s" % (
-        len(values), 
-        sum(values), 
-        target,
-        min(values),
-        max(values),
-        sum(values) / len(values), 
-        mode(values), 
-        median(values)))
-    """
 
 def draw():
     gameDisplay.fill(RENDERER.BLK)
@@ -733,7 +669,9 @@ def game_loop():
     quit()
 
 if __name__ == "__main__":
-    render_font()
+    with open(os.path.join(ROOT, "font.txt"), "rb") as file:
+        RENDERER.load_font(file.read().replace("\r\n", "\n"))
+        
     load_game()
     #launcher.render_page()
     game_loop()

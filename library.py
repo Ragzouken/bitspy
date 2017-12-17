@@ -9,7 +9,10 @@ import traceback
 from datetime import datetime
 from StringIO import StringIO
 from parsing import BitsyParser
+from rendering import Renderer
 from collections import OrderedDict
+
+ROOT = os.path.dirname(__file__)
 
 def read_index(file):
     index = OrderedDict()
@@ -181,6 +184,58 @@ def get_version(entry):
 
     return "0"
 
+def draw_avatars():
+    import pygame
+    pygame.init()
+
+    renderer = Renderer()
+
+    width = 35
+    height = 13
+
+    gap = 0
+
+    page1 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
+    page2 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
+
+    values1 = []
+    values2 = []
+
+    for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
+        try:
+            dest = os.path.join(ROOT, "library", "%s.bitsy.txt" % entry["boid"])
+
+            with open(dest, "rb") as file:
+                data = file.read().replace("\r\n", "\n")
+                lines = data.split("\n")
+                parser = BitsyParser(lines)
+                parser.parse(silent = True)
+                if len(parser.world["tiles"]) > 0:
+                    graphic = parser.world["sprites"]["A"]["graphic"]
+                    frame1, frame2 = pygame.Surface((16, 16)), pygame.Surface((16, 16))
+
+                    renderer.render_frame_to_surface(frame1, graphic[ 0], renderer.SPR, renderer.BGR)
+                    renderer.render_frame_to_surface(frame2, graphic[-1], renderer.SPR, renderer.BGR)
+                    renderer.recolor_surface(frame1, parser.world["palettes"]["0"]["colors"])
+                    renderer.recolor_surface(frame2, parser.world["palettes"]["0"]["colors"])
+                    values1.append(frame1)
+                    values2.append(frame2)
+                #if len(parser.world["tiles"]) > 0:
+                #    values.append(world_contains_frame(parser.world, cat))
+        except Exception as e:
+            print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
+            traceback.print_exc()
+
+    for y in xrange(height):
+        for x in xrange(width):
+            if y * width + x >= len(values1):
+                break
+            page1.blit(values1[y * width + x], (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap))
+            page2.blit(values2[y * width + x], (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap))
+
+    pygame.image.save(page1, "avatars1.png")
+    pygame.image.save(page2, "avatars2.png")
+
 if __name__ == "__main__":
     root = os.path.dirname(__file__)
 
@@ -197,6 +252,8 @@ if __name__ == "__main__":
                         help='some stats')
     parser.add_argument('--versions', dest='versions', action='store_true',
                         help='print all bitsy versions')
+    parser.add_argument('--avatars', '-a', dest='avatars', action='store_true',
+                        help='generate avatar collage')
 
     args = parser.parse_args()
     
@@ -223,6 +280,9 @@ if __name__ == "__main__":
     if args.versions:
         for entry in index.itervalues():
             print("%s // %s" % (entry["title"], get_version(entry)))
+
+    if args.avatars:
+        draw_avatars()
 
     """
     for row in reader:
