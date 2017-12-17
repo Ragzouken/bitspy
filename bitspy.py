@@ -219,8 +219,9 @@ class BitsyPlayer:
         return self.world["rooms"][id]
 
     def direction_input(self, direction, key):
-        if self.dialogue_lines and key:
-            self.advance_dialogue()
+        if self.dialogue_lines:
+            if key:
+                self.advance_dialogue()
         else:
             if direction == 2:
                 if self.avatar_x == 0 and "L" in self.avatar_room["links"]:
