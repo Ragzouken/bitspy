@@ -742,7 +742,7 @@ def game_loop():
                 launcher.direction_input(dir)
 
             dir = -1
-            key = False
+            pressed = False
 
         if not player.ended:
             player.set_frame_count(anim)
