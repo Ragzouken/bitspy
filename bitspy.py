@@ -218,8 +218,8 @@ class BitsyPlayer:
     def get_room_from_id(self, id):
         return self.world["rooms"][id]
 
-    def direction_input(self, direction):
-        if self.dialogue_lines:
+    def direction_input(self, direction, key):
+        if self.dialogue_lines and key:
             self.advance_dialogue()
         else:
             if direction == 2:
@@ -717,8 +717,8 @@ def game_loop():
             elif pressed[pygame.K_UP]:
                 dir = 3
 
-            if not player.ended and dir >= 0:
-                player.direction_input(dir)
+            if not player.ended:
+                player.direction_input(dir, key)
 
                 if not player.dialogue_lines:
                     global bg_inc
