@@ -173,7 +173,7 @@ class BitsyPlayer:
         self.avatar_frame_0 = pygame.Surface((16, 16))
         self.avatar_frame_1 = pygame.Surface((16, 16))
 
-        self.renders = {}
+        self.renderer = Renderer()
 
         self.avatar_x = 0
         self.avatar_y = 0
@@ -198,7 +198,7 @@ class BitsyPlayer:
         self.ended = False
 
         self.world = world
-        self.pre_render_graphics()
+        self.renderer.prerender_world(world)
 
         self.avatar_x = self.world["sprites"]["A"]["x"]
         self.avatar_y = self.world["sprites"]["A"]["y"]
@@ -332,22 +332,12 @@ class BitsyPlayer:
                 self.use_exit(exit)
                 return
 
-    def pre_render_graphics(self):
-        for item in self.world["items"].itervalues():
-            self.renders["item_" + item["id"]] = render(item["graphic"], RENDERER.SPR)
-
-        for sprite in self.world["sprites"].itervalues():
-            self.renders["sprite_" + sprite["id"]] = render(sprite["graphic"], RENDERER.SPR)
-
-        for tile in self.world["tiles"].itervalues():
-            self.renders["tile_" + tile["id"]] = render(tile["graphic"], RENDERER.TIL)
-
     def pre_render_room(self):
         self.render_room_frame(self.room_frame_0, self.avatar_room, 0)
         self.render_room_frame(self.room_frame_1, self.avatar_room, 1)
 
-        self.avatar_frame_0.blit(self.renders["sprite_A"][ 0], (0, 0))
-        self.avatar_frame_1.blit(self.renders["sprite_A"][-1], (0, 0))
+        self.avatar_frame_0.blit(self.renderer.renders["sprite_A"][ 0], (0, 0))
+        self.avatar_frame_1.blit(self.renderer.renders["sprite_A"][-1], (0, 0))
 
         RENDERER.recolor_surface(self.avatar_frame_0, self.palette)
         RENDERER.recolor_surface(self.avatar_frame_1, self.palette)
@@ -361,14 +351,14 @@ class BitsyPlayer:
                     continue
                 tile = self.world["tiles"][id]
 
-                surface.blit(self.renders["tile_" + id][frame], (x * 16, y * 16))
+                surface.blit(self.renderer.renders["tile_" + id][frame], (x * 16, y * 16))
 
         for item in room["items"]:
-            surface.blit(self.renders["item_" + item["id"]][frame], (item["x"] * 16, item["y"] * 16))
+            surface.blit(self.renderer.renders["item_" + item["id"]][frame], (item["x"] * 16, item["y"] * 16))
 
         for sprite in self.world["sprites"].values():
             if sprite["id"] != "A" and sprite["room"] == room["id"]:
-                surface.blit(self.renders["sprite_" + sprite["id"]][frame], (sprite["x"] * 16, sprite["y"] * 16))
+                surface.blit(self.renderer.renders["sprite_" + sprite["id"]][frame], (sprite["x"] * 16, sprite["y"] * 16))
 
         RENDERER.recolor_surface(surface, self.palette)
 
@@ -497,17 +487,6 @@ def load_game():
     random.shuffle(launcher.games)
     launcher.games.sort(key=lambda entry: entry["date"])
     launcher.subset = launcher.games
-
-def render(graphic, primary):
-    renders = [pygame.Surface((16, 16)), pygame.Surface((16, 16))]
-
-    for i in xrange(2):
-        RENDERER.render_frame_to_surface(renders[i], 
-                                         graphic[i % len(graphic)], 
-                                         primary, 
-                                         RENDERER.BGR)
-
-    return renders
 
 launcher = Launcher()
 player = BitsyPlayer()
@@ -671,7 +650,7 @@ def game_loop():
 if __name__ == "__main__":
     with open(os.path.join(ROOT, "font.txt"), "rb") as file:
         RENDERER.load_font(file.read().replace("\r\n", "\n"))
-        
+
     load_game()
     #launcher.render_page()
     game_loop()

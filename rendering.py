@@ -10,6 +10,7 @@ class Renderer:
     def __init__(self):
         self.font = [pygame.Surface((6, 8)) for i in xrange(256)]
         self.arrow = pygame.Surface((5, 3))
+        self.renders = {}
 
     def load_font(self, data, arrow = "11111\n01110\n00100"):
         sections = data.split("\n\n")
@@ -53,3 +54,21 @@ class Renderer:
         pixels.replace(self.BGR, palette[0])
         pixels.replace(self.TIL, palette[1])
         pixels.replace(self.SPR, palette[2])
+
+    def prerender_world(self, world):
+        for item in world["items"].itervalues():
+            self.prerender_graphic("item_" + item["id"], item["graphic"], self.SPR, self.BGR)
+
+        for sprite in world["sprites"].itervalues():
+            self.prerender_graphic("sprite_" + sprite["id"], sprite["graphic"], self.SPR, self.BGR)
+
+        for tile in world["tiles"].itervalues():
+            self.prerender_graphic("tile_" + tile["id"], tile["graphic"], self.TIL, self.BGR)
+
+    def prerender_graphic(self, id, graphic, foreground, background):
+        renders = [pygame.Surface((16, 16)), pygame.Surface((16, 16))]
+
+        self.render_frame_to_surface(renders[0], graphic[ 0], foreground, background)
+        self.render_frame_to_surface(renders[1], graphic[-1], foreground, background)
+
+        self.renders[id] = renders
