@@ -50,6 +50,7 @@ class Renderer:
 
     def load_font(self, data, arrow = "11111\n01110\n00100"):
         self.font.load_font(data)
+        render_data_to_surface(self.arrow, arrow.split("\n"), self.WHT, self.BLK)
         self.arrow = pygame.transform.scale(self.arrow, (10, 6))
 
     def render_frame_to_surface(self,

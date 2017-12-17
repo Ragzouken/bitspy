@@ -14,12 +14,28 @@ from library import read_index
 
 # CONFIG #
 SCREEN = (480, 272)
-ALIGN = "LEFT" # "LEFT" "CENTER" "RIGHT"
+ALIGN = 0 # "LEFT" "CENTER" "RIGHT"
 ROTATE = 1 # 0 1 2 3
 TEXT_DELAY = 50 #ms
-ARROW_KEYS = [pygame.K_KP2, pygame.K_KP5, pygame.K_KP8, pygame.K_KP6]
-MENU_KEY = pygame.K_BACKSPACE
-DEBUG_KEY = pygame.K_KP_PLUS
+KEY_BINDINGS = {
+    pygame.K_KP2: "RIGHT",
+    pygame.K_KP5: "DOWN",
+    pygame.K_KP8: "LEFT",
+    pygame.K_KP6: "UP",
+
+    pygame.K_RIGHT: "RIGHT",
+    pygame.K_DOWN:  "DOWN",
+    pygame.K_LEFT:  "LEFT",
+    pygame.K_UP:    "UP",
+
+    pygame.K_BACKSPACE: "MENU",
+    pygame.K_KP_PLUS: "DEBUG",
+    pygame.K_q: "QUIT",
+    pygame.K_ESCAPE: "QUIT",
+
+    pygame.K_1: "ROTATE",
+    pygame.K_2: "ALIGN",
+}
 
 FPS = 15
 ##########
@@ -93,14 +109,19 @@ class Launcher:
 
         self.render_page()
 
-    def direction_input(self, direction):
-        if direction == 3:
+    def input(self, action, pressed):
+        if action == "MENU":
+            self.menu_input()
+            return
+
+        if action == "UP":
             self.row = (self.row - 1) % len(self.subset)
-        elif direction == 1:
+        elif action == "DOWN":
             self.row = (self.row + 1) % len(self.subset)
-        elif direction == 0:
+        elif action == "RIGHT":
             try:
                 player.change_world(load_file(self.selected["boid"]))
+                switch_focus(player)
             except:
                 traceback.print_exc()
                 self.games.remove(self.selected)
@@ -210,30 +231,34 @@ class BitsyPlayer:
     def get_room_from_id(self, id):
         return self.world["rooms"][id]
 
-    def direction_input(self, direction, key):
+    def input(self, action, key):
+        if action == "MENU" or action == "QUIT":
+            switch_focus(launcher)
+            return
+
         if self.dialogue_lines:
             if key:
                 self.advance_dialogue()
         else:
-            if direction == 2:
+            if action == "LEFT":
                 if self.avatar_x == 0 and "L" in self.avatar_room["links"]:
                     self.avatar_x = 15
                     self.set_room(self.avatar_room["links"]["L"])
                 else:
                     self.move_into(max(0, self.avatar_x - 1), self.avatar_y)
-            elif direction == 0:
+            elif action == "RIGHT":
                 if self.avatar_x == 15 and "R" in self.avatar_room["links"]:
                     self.avatar_x = 0
                     self.set_room(self.avatar_room["links"]["R"])
                 else:
                     self.move_into(min(15, self.avatar_x + 1), self.avatar_y)
-            elif direction == 3:
+            elif action == "UP":
                 if self.avatar_y == 0 and "U" in self.avatar_room["links"]:
                     self.avatar_y = 15
                     self.set_room(self.avatar_room["links"]["U"])
                 else:
                     self.move_into(self.avatar_x, max(0, self.avatar_y - 1))
-            elif direction == 1:
+            elif action == "DOWN":
                 if self.avatar_y == 15 and "D" in self.avatar_room["links"]:
                     self.avatar_y = 0
                     self.set_room(self.avatar_room["links"]["D"])
@@ -500,16 +525,16 @@ def draw():
     pad_x = gap_h // 2
     pad_y = gap_v // 2
 
-    if ALIGN == "LEFT":
+    if ALIGN == 0: # left
         pad_x = pad_y
-    elif ALIGN == "CENTER":
+    elif ALIGN == 1: # center
         pad_x = gap_h // 2
-    elif ALIGN == "RIGHT":
+    elif ALIGN == 2: # right
         pad_x = SCREEN[0] - 256 - pad_y
 
-    if player.ended:
+    if FOCUS == launcher:
         player.screen.blit(launcher.screen, (0, 0))
-    
+
     screen2 = pygame.transform.rotate(player.screen, -90 * ROTATE)
     #screen2 = pygame.transform.scale(screen, (512, 512))
     #screen2 = pygame.transform.smoothscale(screen, ((272, 272)))
@@ -523,11 +548,31 @@ def clear_screen():
     pygame.display.update()
 
 RESTART = False
+FOCUS = launcher
+
+def capture_bg():
+    global bg_inc
+    bg_inc = bg_inc + 1
+    if (bg_inc > 255):
+        bg_inc = 0
+        random.shuffle(bg_src)
+        random.shuffle(bg_dst)
+
+    sx, sy = bg_src[bg_inc]
+    dx, dy = bg_dst[bg_inc]
+
+    background.blit(player.screen, 
+                    (sx * 16, sy * 16),
+                    (dx * 16, dy * 16, 16, 16))
+
+def switch_focus(thing):
+    global FOCUS
+    FOCUS = thing
 
 def game_loop():
     global ROTATE, ALIGN, RESTART
 
-    dir = -1
+    action = -1
     pressed = False
     exit = False
     anim = 0
@@ -543,96 +588,42 @@ def game_loop():
             if event.type == pygame.KEYDOWN:
                 pressed = True
 
-                for i, key in enumerate(ARROW_KEYS):
+                for key, val in KEY_BINDINGS.iteritems():
                     if event.key == key:
-                        dir = i
+                        action = val
 
-                if event.key == MENU_KEY:
-                    if not player.ended:
-                        player.ended = True
-                    else:
-                        launcher.menu_input()
-                elif event.key == DEBUG_KEY:
+                if action == "MENU":
+                    FOCUS.input(MENU, True)
+                elif action == "DEBUG":
                     from subprocess import call
                     call(["bash", os.path.join(ROOT, "update.sh")])
                     exit = True
                     RESTART = True
-                elif event.key == pygame.K_LEFT:
-                    dir = 2
-                elif event.key == pygame.K_RIGHT:
-                    dir = 0
-                elif event.key == pygame.K_UP:
-                    dir = 3
-                elif event.key == pygame.K_DOWN:
-                    dir = 1
-                elif event.key == pygame.K_q:
-                    if player.ended:
+                elif action == "QUIT":
+                    if FOCUS == launcher:
                         exit = True
                     else: 
                         player.ended = True
-                elif event.key == pygame.K_ESCAPE:
-                    if player.ended:
-                        exit = True
-                    else: 
-                        player.ended = True
-                elif event.key == pygame.K_0:
-                    ROTATE = 0
-                elif event.key == pygame.K_1:
-                    ROTATE = 1
-                elif event.key == pygame.K_2:
-                    ROTATE = 2
-                elif event.key == pygame.K_3:
-                    ROTATE = 3
-                elif event.key == pygame.K_i:
-                    ALIGN = "LEFT"
-                    clear_screen()
-                elif event.key == pygame.K_o:
-                    ALIGN = "CENTER"
-                    clear_screen()
-                elif event.key == pygame.K_p:
-                    ALIGN = "RIGHT"
+                        switch_focus(launcher)
+                elif action == "ROTATE":
+                    ROTATE = (ROTATE + 1) % 4
+                elif action == "ALIGN":
+                    ALIGN = (ALIGN + 1) % 3
                     clear_screen()
 
         if anim % 3 == 0:
-            #if dir >= 0:
-            #    dir = (dir - ROTATE) % 4
-            
             down = pygame.key.get_pressed()
 
-            if down[pygame.K_RIGHT]:
-                dir = 0
-            elif down[pygame.K_DOWN]:
-                dir = 1
-            elif down[pygame.K_LEFT]:
-                dir = 2
-            elif down[pygame.K_UP]:
-                dir = 3
-
-            for i, key in enumerate(ARROW_KEYS):
+            for key, val in KEY_BINDINGS.iteritems():
                 if down[key]:
-                    dir = i
+                    action = val
 
-            if not player.ended:
-                player.direction_input(dir, pressed)
+            FOCUS.input(action, pressed)
 
-                if not player.dialogue_lines:
-                    global bg_inc
-                    bg_inc = bg_inc + 1
-                    if (bg_inc > 255):
-                        bg_inc = 0
-                        random.shuffle(bg_src)
-                        random.shuffle(bg_dst)
+            if not player.ended and not player.dialogue_lines:
+                capture_bg()
 
-                    sx, sy = bg_src[bg_inc]
-                    dx, dy = bg_dst[bg_inc]
-
-                    background.blit(player.screen, 
-                                    (sx * 16, sy * 16),
-                                    (dx * 16, dy * 16, 16, 16))
-            else:
-                launcher.direction_input(dir)
-
-            dir = -1
+            action = -1
             pressed = False
 
         if not player.ended:
