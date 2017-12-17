@@ -298,6 +298,24 @@ class BitsyPlayer:
         self.generate_dialogue(self.world["endings"][ending["id"]]["text"])
         self.ending = True
 
+    def get_tile_from_id(self, tile_id):
+        if tile_id in self.world["tiles"]:
+            return self.world["tiles"][tile_id]
+        else:
+            return None
+
+    def check_wall(self, x, y):
+        room = self.avatar_room
+        tile_id = self.avatar_room["tilemap"][y][x]
+        tile = self.get_tile_from_id(tile_id)
+
+        if room["walls"]:
+            return tile_id in room["walls"]
+        elif tile is not None:
+            return tile["wall"]
+        else:
+            return False
+
     def move_into(self, x, y):
         room = self.avatar_room
         tile = self.avatar_room["tilemap"][y][x]
@@ -309,7 +327,7 @@ class BitsyPlayer:
                     self.generate_dialogue(self.world["dialogues"][dialogue]["text"])
                 return
 
-        if not tile in room["walls"]:
+        if not self.check_wall(x, y):
             self.avatar_x = x
             self.avatar_y = y
 

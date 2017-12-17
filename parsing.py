@@ -35,6 +35,8 @@ class BitsyParser:
                 self.parse_dialogue()
             elif self.check_line("END "):
                 self.parse_ending()
+            elif self.check_line("WAL "): #global walls mod
+                self.world["global_walls_mod"] = self.take_split(" ")[1].split(",")
             else:
                 self.skip_line(silent)
 
@@ -44,6 +46,10 @@ class BitsyParser:
         for id, sprite in self.world["sprites"].iteritems():
             if sprite["dialogue"] is None and id in self.world["dialogues"]:
                 sprite["dialogue"] = id
+
+        if "global_walls_mod" in self.world:
+            for id in self.world["global_walls_mod"]:
+                self.world["tiles"][id]["wall"] = True
 
     def take_line(self):        
         line = self.lines[self.index]
@@ -184,11 +190,16 @@ class BitsyParser:
         self.add_object("endings", ending)
 
     def parse_tile(self):
-        tile = {}
+        tile = {
+            "wall": False,
+        }
 
         _, tile["id"] = self.take_split(" ", 1)
         tile["graphic"] = self.parse_graphic()
         tile["name"] = self.parse_name()
+
+        if self.check_line("WAL "):
+            tile["wall"] = self.take_split(" ").strip() == "true"
 
         self.add_object("tiles", tile)
 
