@@ -637,7 +637,7 @@ def game_loop():
     global ROTATE, ALIGN, RESTART
 
     dir = -1
-    key = False
+    pressed = False
     exit = False
     anim = 0
 
@@ -650,7 +650,7 @@ def game_loop():
             if event.type == pygame.QUIT:
                 exit = True
             if event.type == pygame.KEYDOWN:
-                key = True
+                pressed = True
 
                 for i, key in enumerate(ARROW_KEYS):
                     if event.key == key:
@@ -722,7 +722,7 @@ def game_loop():
                     dir = i
 
             if not player.ended:
-                player.direction_input(dir, key)
+                player.direction_input(dir, pressed)
 
                 if not player.dialogue_lines:
                     global bg_inc
