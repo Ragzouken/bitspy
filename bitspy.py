@@ -8,6 +8,7 @@ import os
 import csv
 import traceback
 
+from rendering import Renderer
 from parsing import BitsyParser
 from library import read_index
 
@@ -19,6 +20,8 @@ TEXT_DELAY = 50 #ms
 ARROW_KEYS = [pygame.K_KP2, pygame.K_KP5, pygame.K_KP8, pygame.K_KP6]
 MENU_KEY = pygame.K_BACKSPACE
 DEBUG_KEY = pygame.K_KP_PLUS
+
+FPS = 15
 ##########
 
 ROOT = os.path.dirname(__file__)
@@ -39,11 +42,12 @@ BGR = 0x999999
 TIL = 0xFF0000
 SPR = 0xFFFFFF
 
-FPS = 15
 font = [pygame.Surface((6, 8)) for i in xrange(256)]
 arrow = pygame.Surface((5, 3))
 background = pygame.Surface((256, 256))
 background.fill(BGR)
+
+RENDERER = Renderer(font)
 
 bg_inc = 255
 bg_src = [(x, y) for x in xrange(16) for y in xrange(16)]
@@ -133,18 +137,18 @@ class Launcher:
         if self.offset > 0:
             text = self.subset[self.offset - 1]["title"]
             self.screen.fill(BLK, (8, -1 * 12 + 8, len(text) * 6 + 3, 11))
-            self.render_text(text, 8 + 1, -1 * 12 + 8 + 2)
+            RENDERER.render_text_to_surface(self.screen, text, 8 + 1, -1 * 12 + 8 + 2)
 
         i = self.ROWS_PER_PAGE
         if self.offset+i < len(self.subset):
             text = self.subset[self.offset+i]["title"]
             self.screen.fill(BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
-            self.render_text(text, 8 + 1, i * 12 + 8 + 2)
+            RENDERER.render_text_to_surface(self.screen, text, 8 + 1, i * 12 + 8 + 2)
 
         for i, entry in enumerate(chunk):
             text = entry["title"]
             self.screen.fill(BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
-            self.render_text(text, 8 + 1, i * 12 + 8 + 2)
+            RENDERER.render_text_to_surface(self.screen, text, 8 + 1, i * 12 + 8 + 2)
 
         info_x = 128
         info_y = 256 - 44
@@ -163,12 +167,8 @@ class Launcher:
         date = self.selected["date"].strftime("%Y/%m/%d")
 
         self.screen.fill(BLK, (info_x, info_y, 128 - 8, 36))
-        self.render_text(self.selected["credit"], info_x + 8, info_y + 8)
-        self.render_text(date.ljust(16) + "-" + chr(16), info_x + 8, info_y + 8 + 12)
-
-    def render_text(self, text, x, y):
-        for i, c in enumerate(text):
-            self.screen.blit(font[ord(c)], (i * 6 + x, y))
+        RENDERER.render_text_to_surface(self.screen, self.selected["credit"], info_x + 8, info_y + 8)
+        RENDERER.render_text_to_surface(self.screen, date.ljust(16) + "-" + chr(16), info_x + 8, info_y + 8 + 12)
 
 class BitsyPlayer:
     def __init__(self):
@@ -341,6 +341,9 @@ class BitsyPlayer:
                 return
 
     def pre_render_graphics(self):
+        for item in self.world["items"].itervalues():
+            self.renders["item_" + item["id"]] = render(item["graphic"], SPR)
+
         for sprite in self.world["sprites"].itervalues():
             self.renders["sprite_" + sprite["id"]] = render(sprite["graphic"], SPR)
 
@@ -367,6 +370,9 @@ class BitsyPlayer:
                 tile = self.world["tiles"][id]
 
                 surface.blit(self.renders["tile_" + id][frame], (x * 16, y * 16))
+
+        for item in room["items"]:
+            surface.blit(self.renders["item_" + item["id"]][frame], (item["x"] * 16, item["y"] * 16))
 
         for sprite in self.world["sprites"].values():
             if sprite["id"] != "A" and sprite["room"] == room["id"]:
@@ -504,10 +510,10 @@ def render(graphic, primary):
     renders = [pygame.Surface((16, 16)), pygame.Surface((16, 16))]
 
     for i in xrange(2):
-        for y in xrange(0, 8):
-            for x in xrange(0, 8):
-                color = primary if graphic[i % len(graphic)][y][x] else BGR
-                pygame.draw.rect(renders[i], color, [x * 2, y * 2, 2, 2])
+        RENDERER.render_frame_to_surface(renders[i], 
+                                         graphic[i % len(graphic)], 
+                                         primary, 
+                                         BGR)
 
     return renders
 

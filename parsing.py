@@ -10,6 +10,7 @@ class BitsyParser:
             "items": {},
             "dialogues": {},
             "endings": {},
+            "variables": {},
         }
 
     def add_object(self, type, object):
@@ -35,6 +36,8 @@ class BitsyParser:
                 self.parse_dialogue()
             elif self.check_line("END "):
                 self.parse_ending()
+            elif self.check_line("VAR "):
+                self.parse_variable()
             elif self.check_line("WAL "): #global walls mod
                 self.world["global_walls_mod"] = self.take_split(" ")[1].split(",")
             else:
@@ -253,10 +256,15 @@ class BitsyParser:
             while not self.check_line('"""'):
                 dialogue["text"].append(self.take_line())
             dialogue["text"] = "\n".join(dialogue["text"])
+            self.take_line()
         else:
             dialogue["text"] = self.take_line()
 
         self.add_object("dialogues", dialogue)
+
+    def parse_variable(self):
+        _, id = self.take_split(" ")
+        self.world["variables"][id] = self.take_line()
 
     def parse_graphic(self):
         graphic = [self.parse_frame()]
