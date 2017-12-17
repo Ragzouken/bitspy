@@ -36,18 +36,10 @@ pygame.display.set_caption('bitspy')
 
 clock = pygame.time.Clock()
 
-BLK = 0x000000
-WHT = 0xFFFFFF
-BGR = 0x999999
-TIL = 0xFF0000
-SPR = 0xFFFFFF
+RENDERER = Renderer()
 
-font = [pygame.Surface((6, 8)) for i in xrange(256)]
-arrow = pygame.Surface((5, 3))
 background = pygame.Surface((256, 256))
-background.fill(BGR)
-
-RENDERER = Renderer(font)
+background.fill(RENDERER.BGR)
 
 bg_inc = 255
 bg_src = [(x, y) for x in xrange(16) for y in xrange(16)]
@@ -136,18 +128,18 @@ class Launcher:
 
         if self.offset > 0:
             text = self.subset[self.offset - 1]["title"]
-            self.screen.fill(BLK, (8, -1 * 12 + 8, len(text) * 6 + 3, 11))
+            self.screen.fill(RENDERER.BLK, (8, -1 * 12 + 8, len(text) * 6 + 3, 11))
             RENDERER.render_text_to_surface(self.screen, text, 8 + 1, -1 * 12 + 8 + 2)
 
         i = self.ROWS_PER_PAGE
         if self.offset+i < len(self.subset):
             text = self.subset[self.offset+i]["title"]
-            self.screen.fill(BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
+            self.screen.fill(RENDERER.BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
             RENDERER.render_text_to_surface(self.screen, text, 8 + 1, i * 12 + 8 + 2)
 
         for i, entry in enumerate(chunk):
             text = entry["title"]
-            self.screen.fill(BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
+            self.screen.fill(RENDERER.BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
             RENDERER.render_text_to_surface(self.screen, text, 8 + 1, i * 12 + 8 + 2)
 
         info_x = 128
@@ -166,7 +158,7 @@ class Launcher:
 
         date = self.selected["date"].strftime("%Y/%m/%d")
 
-        self.screen.fill(BLK, (info_x, info_y, 128 - 8, 36))
+        self.screen.fill(RENDERER.BLK, (info_x, info_y, 128 - 8, 36))
         RENDERER.render_text_to_surface(self.screen, self.selected["credit"], info_x + 8, info_y + 8)
         RENDERER.render_text_to_surface(self.screen, date.ljust(16) + "-" + chr(16), info_x + 8, info_y + 8 + 12)
 
@@ -342,13 +334,13 @@ class BitsyPlayer:
 
     def pre_render_graphics(self):
         for item in self.world["items"].itervalues():
-            self.renders["item_" + item["id"]] = render(item["graphic"], SPR)
+            self.renders["item_" + item["id"]] = render(item["graphic"], RENDERER.SPR)
 
         for sprite in self.world["sprites"].itervalues():
-            self.renders["sprite_" + sprite["id"]] = render(sprite["graphic"], SPR)
+            self.renders["sprite_" + sprite["id"]] = render(sprite["graphic"], RENDERER.SPR)
 
         for tile in self.world["tiles"].itervalues():
-            self.renders["tile_" + tile["id"]] = render(tile["graphic"], TIL)
+            self.renders["tile_" + tile["id"]] = render(tile["graphic"], RENDERER.TIL)
 
     def pre_render_room(self):
         self.render_room_frame(self.room_frame_0, self.avatar_room, 0)
@@ -357,15 +349,15 @@ class BitsyPlayer:
         self.avatar_frame_0.blit(self.renders["sprite_A"][ 0], (0, 0))
         self.avatar_frame_1.blit(self.renders["sprite_A"][-1], (0, 0))
 
-        recolor(self.avatar_frame_0, self.palette)
-        recolor(self.avatar_frame_1, self.palette)
+        RENDERER.recolor_surface(self.avatar_frame_0, self.palette)
+        RENDERER.recolor_surface(self.avatar_frame_1, self.palette)
 
     def render_room_frame(self, surface, room, frame):
         for y in xrange(0, 16):
             for x in xrange(0, 16):
                 id = room["tilemap"][y][x]
                 if id == "0":
-                    surface.fill(BGR, (x * 16, y * 16, 16, 16))
+                    surface.fill(RENDERER.BGR, (x * 16, y * 16, 16, 16))
                     continue
                 tile = self.world["tiles"][id]
 
@@ -378,7 +370,7 @@ class BitsyPlayer:
             if sprite["id"] != "A" and sprite["room"] == room["id"]:
                 surface.blit(self.renders["sprite_" + sprite["id"]][frame], (sprite["x"] * 16, sprite["y"] * 16))
 
-        recolor(surface, self.palette)
+        RENDERER.recolor_surface(surface, self.palette)
 
     def set_room(self, id):
         room = self.get_room_from_id(id)
@@ -399,7 +391,7 @@ class BitsyPlayer:
             if self.ending:
                 self.ended = True
 
-        self.dialog.fill(BLK)
+        self.dialog.fill(RENDERER.BLK)
         self.dialogue_char = 0
         self.draw_next_char()
 
@@ -425,14 +417,14 @@ class BitsyPlayer:
         y = self.dialogue_char // 32
 
         c = demo[self.dialogue_char]
-        self.dialog.blit(font[ord(c)], (xoff + x * 6, yoff + y * (8 + 4)))
+        self.dialog.blit(RENDERER.font[ord(c)], (xoff + x * 6, yoff + y * (8 + 4)))
 
         self.dialogue_char += 1 
         while self.dialogue_char < len(demo) and demo[self.dialogue_char].strip() == "":
             self.dialogue_char += 1 
 
         if self.dialogue_char == len(demo):
-            self.dialog.blit(arrow, (xoff + 182, yoff + 20)) 
+            self.dialog.blit(RENDERER.arrow, (xoff + 182, yoff + 20)) 
 
         return True
 
@@ -513,40 +505,17 @@ def render(graphic, primary):
         RENDERER.render_frame_to_surface(renders[i], 
                                          graphic[i % len(graphic)], 
                                          primary, 
-                                         BGR)
+                                         RENDERER.BGR)
 
     return renders
 
 def render_font():
-    global arrow
     data = ""
 
     with open(os.path.join(ROOT, "font.txt"), "rb") as file:
         data = file.read().replace("\r\n", "\n")
 
-    sections = data.split("\n\n")
-
-    for i, section in enumerate(sections):
-        pixels = pygame.PixelArray(font[i])
-
-        for y, row in enumerate(section.split("\n")):
-            for x, char in enumerate(row):
-                pixels[x, y] = BLK if char == "0" else WHT
-
-    arrowdata = """11111\n01110\n00100"""
-    pixels = pygame.PixelArray(arrow)
-
-    for y, row in enumerate(arrowdata.split("\n")):
-        for x, char in enumerate(row):
-            pixels[x, y] = BLK if char == "0" else WHT
-
-    arrow = pygame.transform.scale(arrow, (10, 6))
-
-def recolor(surface, palette):
-    pixels = pygame.PixelArray(surface)
-    pixels.replace(BGR, palette[0])
-    pixels.replace(TIL, palette[1])
-    pixels.replace(SPR, palette[2])
+    RENDERER.load_font(data)
 
 launcher = Launcher()
 player = BitsyPlayer()
@@ -574,10 +543,10 @@ def get_avatars():
                 parser = BitsyParser(lines)
                 parser.parse(silent = True)
                 if len(parser.world["tiles"]) > 0:
-                    frame1 = render(parser.world["sprites"]["A"]["graphic"], SPR)[0]
-                    frame2 = render(parser.world["sprites"]["A"]["graphic"], SPR)[1]
-                    recolor(frame1, parser.world["palettes"]["0"]["colors"])
-                    recolor(frame2, parser.world["palettes"]["0"]["colors"])
+                    frame1 = render(parser.world["sprites"]["A"]["graphic"], RENDERER.SPR)[0]
+                    frame2 = render(parser.world["sprites"]["A"]["graphic"], RENDERER.SPR)[1]
+                    RENDERER.recolor_surface(frame1, parser.world["palettes"]["0"]["colors"])
+                    RENDERER.recolor_surface(frame2, parser.world["palettes"]["0"]["colors"])
                     values1.append(frame1)
                     values2.append(frame2)
                 #if len(parser.world["tiles"]) > 0:
@@ -609,7 +578,7 @@ def get_avatars():
     """
 
 def draw():
-    gameDisplay.fill(BLK)
+    gameDisplay.fill(RENDERER.BLK)
 
     gap_h = SCREEN[0] - 256
     gap_v = SCREEN[1] - 256
@@ -635,7 +604,7 @@ def draw():
     pygame.display.update((pad_x, pad_y, SCREEN[0], SCREEN[1]))
 
 def clear_screen():
-    gameDisplay.fill(BLK)
+    gameDisplay.fill(RENDERER.BLK)
     pygame.display.update()
 
 RESTART = False

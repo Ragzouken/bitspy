@@ -3,6 +3,8 @@ class BitsyParser:
         self.lines = lines
         self.index = 0
         self.world = {
+            "version": None,
+            "flags": {},
             "palettes": {},
             "rooms": {},
             "tiles": {},
@@ -20,7 +22,12 @@ class BitsyParser:
         self.world["title"] = self.take_line()
 
         while self.index < len(self.lines):
-            if self.check_line("PAL "):
+            if self.check_line("# BITSY VERSION"):
+                self.world["version"] = self.take_line().rsplit(" ", 2)[-1]
+            elif self.check_line("! "):
+                _, id, value = self.take_split(" ", 3)
+                self.world["flags"][id] = value
+            elif self.check_line("PAL "):
                 self.parse_palette()
             elif self.check_line("ROOM "):
                 self.parse_room()
@@ -202,7 +209,7 @@ class BitsyParser:
         tile["name"] = self.parse_name()
 
         if self.check_line("WAL "):
-            tile["wall"] = self.take_split(" ").strip() == "true"
+            tile["wall"] = self.take_split(" ")[1].strip() == "true"
 
         self.add_object("tiles", tile)
 
@@ -212,6 +219,7 @@ class BitsyParser:
             "x": 0,
             "y": 0,
             "dialogue": None,
+            "items": {},
         }
 
         _, sprite["id"] = self.take_split(" ")
@@ -224,8 +232,9 @@ class BitsyParser:
             _, sprite["room"], pos = self.take_split(" ") 
             sprite["x"], sprite["y"] = (int(c) for c in pos.split(","))
 
-        if self.check_line("ITM "):
-            self.skip_line()
+        while self.check_line("ITM "):
+            _, id, count = self.take_split(" ")
+            sprite["items"][id] = count
 
         self.add_object("sprites", sprite)
 
