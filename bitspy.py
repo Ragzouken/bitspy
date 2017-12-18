@@ -78,7 +78,7 @@ class DebugMenu:
             self.index = (self.index + 1) % len(self.options)
         elif action == "UP":
             self.index = (self.index - 1) % len(self.options)
-        elif action == "MENU" and pressed:
+        elif (action == "MENU" or action == "DEBUG") and pressed:
             switch_focus(launcher)
         elif (action == "LEFT" or action == "RIGHT") and pressed:
             self.do_selected(action == "LEFT")
