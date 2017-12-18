@@ -610,8 +610,10 @@ FOCUS = launcher
 
 def update_and_restart():
     rect = get_screen_rect()
-    gameDisplay.fill((255, 0, 0), rect)
-    RENDERER.font.render_text_line(gameDisplay, "updating...", rect[0] + 8, rect[1] + 8, RENDERER.BLK)
+    buffer.fill((255, 0, 0))
+    RENDERER.font.render_text_line(buffer, "updating...", 8, 8, RENDERER.BLK)
+    screen = pygame.transform.rotate(buffer, -90 * ROTATE)
+    gameDisplay.blit(screen, rect[:2])
     pygame.display.update(rect)
     global EXIT, RESTART
     from subprocess import call
