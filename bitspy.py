@@ -158,6 +158,9 @@ class Launcher:
         if action == "MENU" and pressed:
             self.menu_input()
             return
+        elif action == "DEBUG" and pressed:
+            switch_focus(debugmenu)
+            return
 
         if action == "UP":
             self.row = (self.row - 1) % len(self.subset)
@@ -654,7 +657,7 @@ def game_loop():
                 if action == "MENU":
                     FOCUS.input(action, True)
                 elif action == "DEBUG":
-                    switch_focus(debugmenu)
+                    FOCUS.input(action, True)
                 elif action == "QUIT":
                     if FOCUS == launcher:
                         EXIT = True
