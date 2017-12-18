@@ -657,7 +657,7 @@ def game_loop():
                     switch_focus(debugmenu)
                 elif action == "QUIT":
                     if FOCUS == launcher:
-                        exit = True
+                        EXIT = True
                     else: 
                         player.ended = True
                         switch_focus(launcher)
