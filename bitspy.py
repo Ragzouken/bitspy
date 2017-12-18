@@ -280,13 +280,13 @@ class BitsyPlayer:
     def get_room_from_id(self, id):
         return self.world["rooms"][id]
 
-    def input(self, action, key):
+    def input(self, action, pressed):
         if (action == "MENU" or action == "QUIT") and pressed:
             switch_focus(launcher)
             return
 
         if self.dialogue_lines:
-            if key:
+            if pressed:
                 self.advance_dialogue()
         else:
             if action == "LEFT":
@@ -454,6 +454,7 @@ class BitsyPlayer:
 
             if self.ending:
                 self.ended = True
+                switch_focus(launcher)
 
         self.dialog.fill(RENDERER.BLK)
         self.dialogue_char = 0
@@ -593,9 +594,9 @@ def draw():
         debugmenu.draw(player.screen)
 
     screen2 = pygame.transform.rotate(player.screen, -90 * ROTATE)
+    #screen2 = pygame.transform.scale2x(screen2)
     #screen2 = pygame.transform.scale(screen, (512, 512))
     #screen2 = pygame.transform.smoothscale(screen, ((272, 272)))
-    #pad_y = 0
     gameDisplay.blit(screen2, rect[:2])
 
     pygame.display.update(rect)
