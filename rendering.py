@@ -32,7 +32,10 @@ class BitsyFontRender:
         for i, section in enumerate(sections):
             render_data_to_surface(self.font[i], section.split("\n"), WHT, BLK)
 
-    def render_text_line(self, surface, text, x, y):
+    def render_text_line(self, surface, text, x, y, background = None):
+        if background is not None:
+            surface.fill(background, (x - 1, y - 2, len(text) * 6 + 3, 11))
+
         for i, c in enumerate(text):
             surface.blit(self.font[ord(c)], (i * 6 + x, y))
 

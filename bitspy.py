@@ -1,11 +1,8 @@
 import pygame
-from time import sleep
 import random
 import glob
-import urllib2
 import sys
 import os
-import csv
 import traceback
 
 from rendering import Renderer
@@ -22,14 +19,16 @@ KEY_BINDINGS = {
     pygame.K_KP5: "DOWN",
     pygame.K_KP8: "LEFT",
     pygame.K_KP6: "UP",
-
-    pygame.K_RIGHT: "RIGHT",
-    pygame.K_DOWN:  "DOWN",
-    pygame.K_LEFT:  "LEFT",
-    pygame.K_UP:    "UP",
-
     pygame.K_BACKSPACE: "MENU",
     pygame.K_KP_PLUS: "DEBUG",
+
+    pygame.K_RIGHT: "RIGHT",
+    pygame.K_DOWN: "DOWN",
+    pygame.K_LEFT: "LEFT",
+    pygame.K_UP: "UP",
+    pygame.K_e: "MENU",
+    pygame.K_r: "DEBUG",
+
     pygame.K_q: "QUIT",
     pygame.K_ESCAPE: "QUIT",
 
@@ -68,13 +67,57 @@ def restart_program():
     python = sys.executable
     os.execl(python, python, * sys.argv)
 
-def chunks(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
+class DebugMenu:
+    def __init__(self):
+        self.screen = pygame.Surface((128, 128))
+        self.options = ["rotate", "align", "update"]
+        self.index = 0
 
-def chunk(l, n, i):
-    return l[i:i + n]
+    def input(self, action, pressed):
+        if action == "DOWN":
+            self.index = (self.index + 1) % len(self.options)
+        elif action == "UP":
+            self.index = (self.index - 1) % len(self.options)
+        elif action == "MENU" and pressed:
+            switch_focus(launcher)
+        elif (action == "LEFT" or action == "RIGHT") and pressed:
+            self.do_selected(action == "LEFT")
+
+        self.render()
+
+    def do_selected(self, left):
+        global ROTATE, ALIGN
+
+        selected = self.options[self.index]
+
+        if selected == "rotate":
+            if left:
+                ROTATE = (ROTATE - 1) % 4
+            else:
+                ROTATE = (ROTATE + 1) % 4
+        elif selected == "align":
+            if left:
+                ALIGN = (ALIGN - 1) % 3
+            else:
+                ALIGN = (ALIGN + 1) % 3
+            clear_screen()
+        elif selected == "update":
+            update_and_restart()
+
+    def render(self):
+        self.screen.fill(RENDERER.BLK)
+
+        select_rect = (0, self.index * 12 + 8, 256, 11)
+
+        for i, text in enumerate(self.options):
+            RENDERER.font.render_text_line(self.screen, text, 8 + 1, i * 12 + 8 + 2, RENDERER.BLK)
+
+        buffer.fill((255, 255, 255, 255), select_rect)
+        buffer.blit(self.screen, select_rect[:2], select_rect, pygame.BLEND_SUB)
+        self.screen.blit(buffer, select_rect[:2], select_rect)
+
+    def draw(self, display):
+        display.blit(self.screen, (64, 64))
 
 class Launcher:
     ROWS_PER_PAGE = 20
@@ -93,6 +136,8 @@ class Launcher:
         self.saved_row = 0
         self.saved_offset = 0
 
+        self.show_info = False
+
     def menu_input(self):
         if self.author is not None:
             self.author = None
@@ -110,7 +155,7 @@ class Launcher:
         self.render_page()
 
     def input(self, action, pressed):
-        if action == "MENU":
+        if action == "MENU" and pressed:
             self.menu_input()
             return
 
@@ -118,15 +163,20 @@ class Launcher:
             self.row = (self.row - 1) % len(self.subset)
         elif action == "DOWN":
             self.row = (self.row + 1) % len(self.subset)
-        elif action == "RIGHT":
-            try:
-                player.change_world(load_file(self.selected["boid"]))
-                switch_focus(player)
-            except:
-                traceback.print_exc()
-                self.games.remove(self.selected)
-                self.row = (self.row - 1) % len(self.games)
-                player.ended = True
+        elif action == "RIGHT" and pressed:
+            if True:#self.show_info:
+                try:
+                    player.change_world(load_file(self.selected["boid"]))
+                    switch_focus(player)
+                except:
+                    traceback.print_exc()
+                    self.games.remove(self.selected)
+                    self.row = (self.row - 1) % len(self.games)
+                    player.ended = True
+            else:
+                self.show_info = True
+        elif action == "LEFT" and pressed:
+            pass#self.show_info = False
 
         d = self.row - self.offset
 
@@ -149,29 +199,22 @@ class Launcher:
 
         if self.offset > 0:
             text = self.subset[self.offset - 1]["title"]
-            self.screen.fill(RENDERER.BLK, (8, -1 * 12 + 8, len(text) * 6 + 3, 11))
-            RENDERER.font.render_text_line(self.screen, text, 8 + 1, -1 * 12 + 8 + 2)
+            RENDERER.font.render_text_line(self.screen, text, 8 + 1, -1 * 12 + 8 + 2, RENDERER.BLK)
 
         i = self.ROWS_PER_PAGE
         if self.offset+i < len(self.subset):
             text = self.subset[self.offset+i]["title"]
-            self.screen.fill(RENDERER.BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
-            RENDERER.font.render_text_line(self.screen, text, 8 + 1, i * 12 + 8 + 2)
+            RENDERER.font.render_text_line(self.screen, text, 8 + 1, i * 12 + 8 + 2, RENDERER.BLK)
 
         for i, entry in enumerate(chunk):
             text = entry["title"]
-            self.screen.fill(RENDERER.BLK, (8, i * 12 + 8, len(text) * 6 + 3, 11))
-            RENDERER.font.render_text_line(self.screen, text, 8 + 1, i * 12 + 8 + 2)
+            RENDERER.font.render_text_line(self.screen, text, 8 + 1, i * 12 + 8 + 2, RENDERER.BLK)
 
         info_x = 128
         info_y = 256 - 44
 
         if row >= self.ROWS_PER_PAGE // 2:
             info_y = 8
-
-        #info_y = select_rect[1] - 44
-        #info_y = max(8, info_y)
-        #info_y = min(256 - 44, info_y)
 
         buffer.fill((255, 255, 255, 255), select_rect)
         buffer.blit(self.screen, select_rect[:2], select_rect, pygame.BLEND_SUB)
@@ -182,6 +225,9 @@ class Launcher:
         self.screen.fill(RENDERER.BLK, (info_x, info_y, 128 - 8, 36))
         RENDERER.font.render_text_line(self.screen, self.selected["credit"], info_x + 8, info_y + 8)
         RENDERER.font.render_text_line(self.screen, date.ljust(16) + "-" + chr(16), info_x + 8, info_y + 8 + 12)
+
+        #if self.show_info:
+        #    self.screen.fill(RENDERER.BLK, (8, 8, 256 - 16, 256 - 16))
 
 class BitsyPlayer:
     def __init__(self):
@@ -232,7 +278,7 @@ class BitsyPlayer:
         return self.world["rooms"][id]
 
     def input(self, action, key):
-        if action == "MENU" or action == "QUIT":
+        if (action == "MENU" or action == "QUIT") and pressed:
             switch_focus(launcher)
             return
 
@@ -514,6 +560,7 @@ def load_game():
     launcher.subset = launcher.games
 
 launcher = Launcher()
+debugmenu = DebugMenu()
 player = BitsyPlayer()
 index = {}
 
@@ -534,6 +581,8 @@ def draw():
 
     if FOCUS == launcher:
         player.screen.blit(launcher.screen, (0, 0))
+    elif FOCUS == debugmenu:
+        debugmenu.draw(player.screen)
 
     screen2 = pygame.transform.rotate(player.screen, -90 * ROTATE)
     #screen2 = pygame.transform.scale(screen, (512, 512))
@@ -548,7 +597,15 @@ def clear_screen():
     pygame.display.update()
 
 RESTART = False
+EXIT = False
 FOCUS = launcher
+
+def update_and_restart():
+    global EXIT, RESTART
+    from subprocess import call
+    call(["bash", os.path.join(ROOT, "update.sh")])
+    EXIT = True
+    RESTART = True
 
 def capture_bg():
     global bg_inc
@@ -570,21 +627,21 @@ def switch_focus(thing):
     FOCUS = thing
 
 def game_loop():
-    global ROTATE, ALIGN, RESTART
+    global ROTATE, ALIGN, RESTART, EXIT
 
     action = None
     pressed = False
-    exit = False
     anim = 0
 
     launcher.render_page()
+    debugmenu.render()
 
     #get_avatars()
 
-    while not exit:
+    while not EXIT:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                exit = True
+                EXIT = True
             if event.type == pygame.KEYDOWN:
                 pressed = True
 
@@ -597,10 +654,7 @@ def game_loop():
                 if action == "MENU":
                     FOCUS.input(action, True)
                 elif action == "DEBUG":
-                    from subprocess import call
-                    call(["bash", os.path.join(ROOT, "update.sh")])
-                    exit = True
-                    RESTART = True
+                    switch_focus(debugmenu)
                 elif action == "QUIT":
                     if FOCUS == launcher:
                         exit = True
@@ -617,6 +671,7 @@ def game_loop():
 
                 if used:
                     action = None
+                    pressed = False
 
         if anim % 3 == 0:
             down = pygame.key.get_pressed()
