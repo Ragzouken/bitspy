@@ -567,9 +567,7 @@ debugmenu = DebugMenu()
 player = BitsyPlayer()
 index = {}
 
-def draw():
-    gameDisplay.fill(RENDERER.BLK)
-
+def get_screen_rect():
     gap_h = SCREEN[0] - 256
     gap_v = SCREEN[1] - 256
     pad_x = gap_h // 2
@@ -582,6 +580,13 @@ def draw():
     elif ALIGN == 2: # right
         pad_x = SCREEN[0] - 256 - pad_y
 
+    return (pad_x, pad_y, SCREEN[0], SCREEN[1])
+
+def draw():
+    gameDisplay.fill(RENDERER.BLK)
+
+    rect = get_screen_rect()
+
     if FOCUS == launcher:
         player.screen.blit(launcher.screen, (0, 0))
     elif FOCUS == debugmenu:
@@ -591,9 +596,9 @@ def draw():
     #screen2 = pygame.transform.scale(screen, (512, 512))
     #screen2 = pygame.transform.smoothscale(screen, ((272, 272)))
     #pad_y = 0
-    gameDisplay.blit(screen2, (pad_x, pad_y))
+    gameDisplay.blit(screen2, rect[:2])
 
-    pygame.display.update((pad_x, pad_y, SCREEN[0], SCREEN[1]))
+    pygame.display.update(rect)
 
 def clear_screen():
     gameDisplay.fill(RENDERER.BLK)
@@ -604,6 +609,10 @@ EXIT = False
 FOCUS = launcher
 
 def update_and_restart():
+    rect = get_screen_rect()
+    gameDisplay.fill((255, 0, 0), rect)
+    RENDERER.font.render_text_line(gameDisplay, "updating...", rect[0] + 8, rect[1] + 8, RENDERER.BLK)
+    pygame.display.update(rect)
     global EXIT, RESTART
     from subprocess import call
     call(["bash", os.path.join(ROOT, "update.sh")])
