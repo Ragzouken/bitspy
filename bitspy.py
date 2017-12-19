@@ -349,6 +349,9 @@ class BitsyPlayer:
 
         self.screen.blit(self.dialog, (d_x, d_y))
 
+    def avatar_occupying_object(self, object):
+        return self.avatar_occupying(object["x"], object["y"])
+
     def avatar_occupying(self, x, y):
         return self.avatar_x == x and self.avatar_y == y
 
@@ -362,6 +365,19 @@ class BitsyPlayer:
     def use_ending(self, ending):
         self.generate_dialogue(self.world["endings"][ending["id"]]["text"])
         self.ending = True
+
+    def take_item(self, item):
+        self.avatar_room["items"].remove(item)
+
+        item_id = item["id"]
+        inventory = self.world.sprites["A"]["items"]
+
+        if item_id in inventory:
+            inventory[item_id] += 1
+        else:
+            inventory[item_id] = 1
+
+        self.generate_dialogue(self.get_dialogue_text(self.world["items"][item_id]["dialogue"]))
 
     def get_tile_from_id(self, tile_id):
         if tile_id in self.world["tiles"]:
@@ -381,6 +397,9 @@ class BitsyPlayer:
         else:
             return False
 
+    def get_dialogue_text(self, id):
+        return self.world["dialogues"][id]["text"]
+
     def move_into(self, x, y):
         room = self.avatar_room
         tile = self.avatar_room["tilemap"][y][x]
@@ -389,7 +408,7 @@ class BitsyPlayer:
             if sprite["room"] == self.avatar_room["id"] and x == sprite["x"] and y == sprite["y"] and sprite["id"] != "A":
                 dialogue = sprite["dialogue"]
                 if dialogue is not None:
-                    self.generate_dialogue(self.world["dialogues"][dialogue]["text"])
+                    self.generate_dialogue(self.get_dialogue_text(dialogue))
                 return
 
         if not self.check_wall(x, y):
@@ -397,14 +416,19 @@ class BitsyPlayer:
             self.avatar_y = y
 
         for ending in room["endings"]:
-            if self.avatar_occupying(ending["x"], ending["y"]):
+            if self.avatar_occupying_object(ending):
                 self.use_ending(ending)
                 return
 
         for exit in room["exits"]:
-            if self.avatar_occupying(exit["x"], exit["y"]):
+            if self.avatar_occupying_object(exit):
                 self.use_exit(exit)
                 return
+
+        for item in room["items"]:
+            if self.avatar_occupying_object(item):
+                self.take_item(item)
+                self.pre_render_room()
 
     def pre_render_room(self):
         self.render_room_frame(self.room_frame_0, self.avatar_room, 0)
