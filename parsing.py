@@ -517,6 +517,14 @@ class BitsyParser:
 
         self.add_object("items", item)
 
+    def major_version(self):
+        version = self.world["version"]
+
+        if version is None:
+            return 0
+        else:
+            return int(version.split(".")[0])
+
     def parse_dialogue(self):
         dialogue = {
             "text": "",
@@ -535,12 +543,13 @@ class BitsyParser:
         else:
             dialogue["text"] = self.take_line()
 
-        parser = DialogueParser(dialogue["text"], debug = self.world["title"])
-        try:
-            dialogue["root"] = parser.parse()
-        except:
-            print("Couldn't parse:\n%s\n" % dialogue["text"])
-            traceback.print_exc()
+        if self.major_version() >= 4:
+            parser = DialogueParser(dialogue["text"], debug = self.world["title"])
+            try:
+                dialogue["root"] = parser.parse()
+            except:
+                print("Couldn't parse:\n%s\n" % dialogue["text"])
+                traceback.print_exc()
 
         #pprint.pprint(parser.parse())
         #print(dialogue["id"])

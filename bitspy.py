@@ -370,7 +370,7 @@ class BitsyPlayer:
         self.avatar_room["items"].remove(item)
 
         item_id = item["id"]
-        inventory = self.world.sprites["A"]["items"]
+        inventory = self.world["sprites"]["A"]["items"]
 
         if item_id in inventory:
             inventory[item_id] += 1
