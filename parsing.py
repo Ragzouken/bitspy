@@ -1,3 +1,262 @@
+from __future__ import print_function
+
+import pprint
+import traceback
+
+LIST_TYPES = ["cycle", "shuffle", "sequence"]
+
+def make_say(chars):
+    if len(chars) == 0:
+        return ()
+    else:
+        return ("SAY", "".join(chars))
+
+def clean_chunks(chunks):
+    return [chunk for chunk in chunks if len(chunk) > 0]
+
+def indent(string, count):
+    return "%s%s" % (" " * count, string)
+
+def print_dialogue(root, depth = 0):
+    if len(root) != 2:
+        print(indent("%s", depth) % root)
+        return
+
+    command, chunks = root
+
+    if command == "DO":
+        #print(indent("DO:", depth))
+        for chunk in chunks:
+            print_dialogue(chunk, depth)
+    elif command == "IF":
+        prefix = "IF"
+        for chunk in chunks:
+            condition, block = chunk
+            if condition != "else":
+                print(indent("%s %s THEN", depth) % (prefix, condition))
+                print_dialogue(block, depth + 1)
+                prefix = "ELIF"
+            else:
+                print(indent("ELSE", depth))
+        print(indent("END", depth))
+    elif command == "SAY":
+        print(indent('"%s"', depth) % chunks)
+    elif command.lower() in LIST_TYPES:
+        print(indent(command, depth))
+        for chunk in chunks:
+            print_dialogue(chunk, depth + 1)
+    else:
+        print(pad("OOPS %s", depth) % command)
+
+class DialogueParser:
+    def __init__(self, text, debug = None):
+        self.text = text
+        self.index = 0
+        self.debug = debug
+
+    def print_rest(self):
+        print(self.text[self.index:])
+
+    def parse(self):
+        chars = []
+        chunks = []
+
+        while self.index < len(self.text):
+            if self.check("{"):
+                chunks.append(make_say(chars))
+                del chars[:]
+
+                chunks.append(self.parse_code_block())
+            else:
+                chars.append(self.take())
+
+        chunks2 = [""]
+
+        for chunk in chunks:
+            if type(chunk) == str:
+                chunks2[-1] = chunks2[-1] + chunk
+            else:
+                chunks2.append(chunk)
+                chunks2.append("") 
+
+        chunks = clean_chunks(chunks2)
+
+        return ("DO", chunks)
+
+    def parse_code_block(self):
+        self.take("{")
+
+        chars = []
+        chunks = []
+
+        command = "DO"
+
+        self.skip_whitespace()
+
+        if self.check("-"):
+            command = "IF"
+            chunks.append(self.parse_if())
+
+        for type in LIST_TYPES:
+            if self.check(type):
+                command = type.upper()
+                chunks.append(self.parse_list(command))
+                break
+
+        self.skip_whitespace()
+
+        while not self.check("}"):
+            if self.check("{"):
+                chunks.append("".join(chars).strip())
+                del chars[:]
+
+                chunks.append(self.parse_code_block())
+            else:
+                chars.append(self.take())
+
+        self.take("}")
+
+        chunks.append("".join(chars).strip())
+        chunks = clean_chunks(chunks)
+
+        return ("DO", chunks)
+
+    def skip_whitespace(self):
+        while self.check(" ", "\t", "\n"):
+            self.take()
+
+    def parse_list_entry(self):
+        self.skip_whitespace()
+        self.take("-")
+        self.skip_whitespace()
+
+        chars = []
+        chunks = []
+
+        if self.check("\n"):
+            self.take("\n")
+            self.skip_whitespace()
+
+        while not self.check("}"):
+            if self.check("{"):
+                chunks.append(make_say(chars))
+                del chars[:]
+
+                chunks.append(self.parse_code_block())
+            elif self.check("\n"):
+                self.take("\n")
+                self.skip_whitespace()
+
+                if self.check("-") or self.check("}"):
+                    break
+                else:
+                    chars.append("\n")
+            else:
+                chars.append(self.take())
+
+        chunks.append(make_say(chars))
+        chunks = clean_chunks(chunks)
+
+        return ("DO", chunks)
+
+    def parse_list(self, command):
+        self.take(command.lower())
+
+        branches = []
+
+        while not self.check("}"):
+            branches.append(self.parse_list_entry())
+
+        return (command, branches)
+
+    def parse_if_condition(self):
+        chars = []
+
+        self.take("-")
+        self.skip_whitespace()
+
+        while not self.check("?"):
+            chars.append(self.take())
+
+        return "".join(chars).strip()
+
+    def parse_if_block(self):
+        chars = []
+        chunks = []
+
+        if self.check("\n"):
+            self.take("\n")
+            self.skip_whitespace()
+
+        while not self.check("}"):
+            if self.check("{"):
+                chunks.append(make_say(chars))
+                del chars[:]
+
+                chunks.append(self.parse_code_block())
+            elif self.check("\n"):
+                self.take("\n")
+                self.skip_whitespace()
+
+                if self.check("-") or self.check("}"):
+                    break
+                else:
+                    chars.append("\n")
+            else:
+                chars.append(self.take())
+
+        chunks.append(make_say(chars))
+        chunks = clean_chunks(chunks)
+
+        return ("DO", chunks)
+
+    def parse_if(self):
+        branches = []
+
+        while not self.check("}"):
+            condition = self.parse_if_condition()
+
+            self.take("?")
+
+            block = self.parse_if_block()
+
+            branches.append((condition, block))
+
+        return ("IF", branches)
+
+    def check(self, *args):
+        if "}" in args and self.index == len(self.text):
+            if self.debug is not None:
+                print(self.debug, end=" ")
+            print("WARNING: inserting final }")
+            self.text += "}"
+            return True
+
+        for string in args:
+            if string == self.text[self.index:self.index + len(string)]:
+                return True
+
+        return False
+
+    def take(self, expected = None):
+        if expected is "}" and self.index == len(self.text):
+            if self.debug is not None:
+                print(self.debug, end=" ")
+            print("WARNING: inserting final }")
+            return "}"
+
+        if expected is not None:
+            if not self.check(expected):
+                raise Exception("Did not find expected '%s' in '%s'" % (expected, self.text[self.index:self.index+16]))
+            else:
+                string = self.text[self.index:self.index + len(expected)]
+                self.index += len(expected)
+        else:
+            string = self.text[self.index]
+            self.index += 1
+
+        return string
+
 class BitsyParser:
     def __init__(self, lines):
         self.lines = lines
@@ -19,6 +278,9 @@ class BitsyParser:
         self.world[type][object["id"]] = object
 
     def parse(self, silent = False):
+        if not any(line.strip() for line in self.lines):
+            return
+
         if not self.peek_line().strip():
             self.take_line()
 
@@ -258,6 +520,7 @@ class BitsyParser:
     def parse_dialogue(self):
         dialogue = {
             "text": "",
+            "root": None,
         }
 
         _, dialogue["id"] = self.take_split(" ")
@@ -271,6 +534,18 @@ class BitsyParser:
             self.take_line()
         else:
             dialogue["text"] = self.take_line()
+
+        parser = DialogueParser(dialogue["text"], debug = self.world["title"])
+        try:
+            dialogue["root"] = parser.parse()
+        except:
+            print("Couldn't parse:\n%s\n" % dialogue["text"])
+            traceback.print_exc()
+
+        #pprint.pprint(parser.parse())
+        #print(dialogue["id"])
+        #print_dialogue(parser.parse(), 1)
+        #print("")
 
         self.add_object("dialogues", dialogue)
 

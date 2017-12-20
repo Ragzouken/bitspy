@@ -35,6 +35,31 @@ def read_index(file):
 
     return index
 
+def world(boid):
+    entry = index[boid]
+
+    try:
+        dest = os.path.join(ROOT, "library", "%s.bitsy.txt" % boid)
+
+        with open(dest, "rb") as file:
+            data = file.read().replace("\r\n", "\n")
+            lines = data.split("\n")
+            parser = BitsyParser(lines)
+            parser.parse(silent = True)
+            return parser.world
+    except Exception as e:
+        print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
+        traceback.print_exc()
+
+    return None
+
+def worlds(index):
+    for entry in index.itervalues():
+        world = world(entry["boid"])
+
+        if world is not None:
+            yield world
+
 def download(index):
     for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
         dest = os.path.join(root, "library", "%s.bitsy.txt" % entry["boid"])
@@ -236,6 +261,13 @@ def draw_avatars():
     pygame.image.save(page1, "avatars1.png")
     pygame.image.save(page2, "avatars2.png")
 
+def print_dialogues():
+    with open("dialogues.txt", "w") as file:
+        for world in worlds(index):
+            for dialogue in world["dialogues"].itervalues():
+                file.write(dialogue["text"])
+                file.write("\n\n")
+
 if __name__ == "__main__":
     root = os.path.dirname(__file__)
 
@@ -254,6 +286,10 @@ if __name__ == "__main__":
                         help='print all bitsy versions')
     parser.add_argument('--avatars', '-a', dest='avatars', action='store_true',
                         help='generate avatar collage')
+    parser.add_argument('--dialogues', dest='dialogues', action='store_true',
+                        help='output all dialogues')
+    parser.add_argument('--test', '-t', dest='test', action='store_true',
+                        help='test flotsam parsing...')
 
     args = parser.parse_args()
     
@@ -283,6 +319,12 @@ if __name__ == "__main__":
 
     if args.avatars:
         draw_avatars()
+
+    if args.dialogues:
+        print_dialogues()
+
+    if args.test:
+        world("010BEB39")
 
     """
     for row in reader:
