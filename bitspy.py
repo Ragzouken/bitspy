@@ -377,7 +377,7 @@ class BitsyPlayer:
         else:
             inventory[item_id] = 1
 
-        self.generate_dialogue(self.get_dialogue_text(self.world["items"][item_id]["dialogue"]))
+        self.execute_dialogue(self.world["items"][item_id]["dialogue"])
 
     def get_tile_from_id(self, tile_id):
         if tile_id in self.world["tiles"]:
@@ -408,7 +408,7 @@ class BitsyPlayer:
             if sprite["room"] == self.avatar_room["id"] and x == sprite["x"] and y == sprite["y"] and sprite["id"] != "A":
                 dialogue = sprite["dialogue"]
                 if dialogue is not None:
-                    self.generate_dialogue(self.get_dialogue_text(dialogue))
+                    self.execute_dialogue(dialogue)
                 return
 
         if not self.check_wall(x, y):
@@ -516,6 +516,49 @@ class BitsyPlayer:
             self.dialog.blit(RENDERER.arrow, (xoff + 182, yoff + 20)) 
 
         return True
+
+    def execute_set(self, set):
+        pass
+
+    def evaluate_condition(self, condition):
+        if condition == "else":
+            return True
+
+        return False
+
+    def execute_node(self, node):
+        print(node)
+        command, arguments = node
+
+        if command == "DO":
+            if type(arguments) == str:
+                print(arguments)
+            else:
+                for argument in arguments:
+                    self.execute_node(argument)
+        elif command == "SAY":
+            self.fragments.append(arguments)
+        elif command == "SET":
+            self.execute_set(arguments)
+        elif command == "IF":
+            for condition, block in arguments:
+                if self.evaluate_condition(condition):
+                    self.execute_node(block)
+                    break
+        else:
+            print(command)
+
+    def execute_dialogue(self, id):
+        dialogue = self.world["dialogues"][id]
+        root = dialogue["root"]
+
+        if root is None:
+            return self.generate_dialogue(dialogue["text"])
+
+        self.fragments = []
+
+        self.execute_node(root)
+        self.generate_dialogue("".join(self.fragments))
 
     def generate_dialogue(self, text):
         lines = text.split("\n")

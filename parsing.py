@@ -41,6 +41,8 @@ def print_dialogue(root, depth = 0):
         print(indent("END", depth))
     elif command == "SAY":
         print(indent('"%s"', depth) % chunks)
+    elif command == "SET":
+        print(indent('"%s"', depth) % chunks)
     elif command.lower() in LIST_TYPES:
         print(indent(command, depth))
         for chunk in chunks:
@@ -107,7 +109,7 @@ class DialogueParser:
 
         while not self.check("}"):
             if self.check("{"):
-                chunks.append("".join(chars).strip())
+                chunks.append(("SET", "".join(chars).strip()))
                 del chars[:]
 
                 chunks.append(self.parse_code_block())
@@ -116,7 +118,7 @@ class DialogueParser:
 
         self.take("}")
 
-        chunks.append("".join(chars).strip())
+        chunks.append(("SET", "".join(chars).strip()))
         chunks = clean_chunks(chunks)
 
         return ("DO", chunks)
