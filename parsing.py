@@ -4,6 +4,9 @@ import pprint
 import traceback
 
 LIST_TYPES = ["cycle", "shuffle", "sequence"]
+TAGS = ["wvy", "shk", "rbw", "clr1", "clr2", "clr3"]
+COMPARISONS = [">=", "<=", ">", "<", "=="]
+OPERATORS = ["+", "-", "*", "/"]
 
 def make_say(chars):
     if len(chars) == 0:
@@ -17,36 +20,45 @@ def clean_chunks(chunks):
 def indent(string, count):
     return "%s%s" % (" " * count, string)
 
-def print_dialogue(root, depth = 0):
-    if len(root) != 2:
-        print(indent("%s", depth) % root)
-        return
+def string_comparison(comparison):
+    operator, a, b = comparison
 
-    command, chunks = root
+    left = string_expression(a)
+    right = string_expression(b)
+
+    return "%s %s %s" % (left, operator, right)
+
+def string_expression(expression):
+    return str(expression)
+
+def print_dialogue(root, depth = 0):
+    command = root[0]
 
     if command == "DO":
         #print(indent("DO:", depth))
-        for chunk in chunks:
+        for chunk in root[1]:
             print_dialogue(chunk, depth)
     elif command == "IF":
         prefix = "IF"
-        for chunk in chunks:
+        for chunk in root[1]:
             condition, block = chunk
-            if condition != "else":
-                print(indent("%s %s THEN", depth) % (prefix, condition))
+            if condition != "ELSE":
+                print(indent("%s %s THEN", depth) % (prefix, string_comparison(condition)))
                 print_dialogue(block, depth + 1)
                 prefix = "ELIF"
             else:
                 print(indent("ELSE", depth))
         print(indent("END", depth))
     elif command == "SAY":
-        print(indent('"%s"', depth) % chunks)
+        print(indent('"%s"', depth) % root[1])
     elif command == "SET":
-        print(indent('"%s"', depth) % chunks)
+        print(indent("SET %s TO %s", depth) % (root[1], root[2]))
     elif command.lower() in LIST_TYPES:
         print(indent(command, depth))
-        for chunk in chunks:
+        for chunk in root[1]:
             print_dialogue(chunk, depth + 1)
+    elif command.lower() in TAGS:
+        print(indent(command, depth))
     else:
         print(pad("OOPS %s", depth) % command)
 
@@ -85,6 +97,13 @@ class DialogueParser:
 
         return ("DO", chunks)
 
+    def parse_statements(self, text):
+        statements = []
+        for line in text.split("\n"):
+            statements.append(self.parse_statement(line))
+
+        return statements
+
     def parse_code_block(self):
         self.take("{")
 
@@ -109,7 +128,7 @@ class DialogueParser:
 
         while not self.check("}"):
             if self.check("{"):
-                chunks.append(("SET", "".join(chars).strip()))
+                chunks.extend(self.parse_statements("".join(chars)))
                 del chars[:]
 
                 chunks.append(self.parse_code_block())
@@ -118,7 +137,7 @@ class DialogueParser:
 
         self.take("}")
 
-        chunks.append(("SET", "".join(chars).strip()))
+        chunks.extend(self.parse_statements("".join(chars)))
         chunks = clean_chunks(chunks)
 
         return ("DO", chunks)
@@ -180,7 +199,7 @@ class DialogueParser:
         while not self.check("?"):
             chars.append(self.take())
 
-        return "".join(chars).strip()
+        return self.parse_comparison("".join(chars))
 
     def parse_if_block(self):
         chars = []
@@ -225,6 +244,79 @@ class DialogueParser:
             branches.append((condition, block))
 
         return ("IF", branches)
+
+    def parse_statement(self, text):
+        text = text.strip()
+
+        if len(text) == 0:
+            return []
+        elif text in TAGS:
+            return (text.upper(),)
+
+        destination, expression = text.split("=", 1)
+        expression = self.parse_expression(expression)
+
+        return ("SET", destination.strip(), expression)
+
+    def parse_comparison(self, text):
+        text = text.strip()
+
+        if text == "else" or text == "default":
+            return "ELSE"
+
+        for comparison in COMPARISONS:
+            if comparison in text:
+                a, b = text.split(comparison, 1)
+                
+                return (comparison, self.parse_expression(a), self.parse_expression(b)) 
+
+        return None
+
+    def parse_expression(self, text):
+        text = text.strip()
+        parts = []
+
+        while any(operator in text for operator in OPERATORS):
+            for i in xrange(len(text)):
+                if text[i] in OPERATORS:
+                    operator = text[i]
+
+                    part, text = text.strip().split(operator, 1)
+                    parts.append(part.strip())
+                    parts.append(operator)
+                    break
+
+        parts.append(text.strip())
+
+        output = []
+        operators = []
+        parts.reverse()
+
+        while parts:
+            token = parts.pop()
+
+            if token not in OPERATORS:
+                output.append(token)
+            else:
+                prec1 = OPERATORS.index(token)
+
+                while operators and operators.index(operators[-1]) >= prec1:
+                    output.append(operators.pop())
+
+                operators.append(token)
+
+        while operators:
+            output.append(operators.pop())
+
+        def combine():
+            if output[-1] in OPERATORS:
+                return [output.pop(), combine(), combine()]
+            else:
+                return output.pop()
+
+        root = combine()
+
+        return root
 
     def check(self, *args):
         if "}" in args and self.index == len(self.text):

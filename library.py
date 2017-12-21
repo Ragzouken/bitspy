@@ -8,7 +8,7 @@ import webbrowser
 import traceback
 from datetime import datetime
 from StringIO import StringIO
-from parsing import BitsyParser
+from parsing import BitsyParser, print_dialogue
 from rendering import Renderer
 from collections import OrderedDict
 
@@ -324,7 +324,8 @@ if __name__ == "__main__":
         print_dialogues()
 
     if args.test:
-        world("010BEB39")
+        for dialogue in world("010BEB39")["dialogues"].itervalues():
+            print_dialogue(dialogue["root"])
 
     """
     for row in reader:
