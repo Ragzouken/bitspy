@@ -261,6 +261,7 @@ class BitsyPlayer:
     def change_world(self, world):
         self.dialogue_lines = []
         self.dialogue_char = 0
+        self.dialogue_states = {}
 
         self.prev_frame = -1
         self.starting = True
@@ -526,6 +527,22 @@ class BitsyPlayer:
 
         return False
 
+    def execute_list(self, type, options):
+        if id(options) not in self.dialogue_states:
+            self.dialogue_states[id(options)] = -1
+
+        curr = self.dialogue_states[id(options)]
+
+        if type == "SHUFFLE":
+            curr = random.randint(len(options))
+        elif type == "CYCLE":
+            curr = (curr + 1) % len(options)
+        elif type == "SEQUENCE":
+            curr = min(curr + 1, len(options) - 1)
+
+        self.execute_node(options[curr])
+        self.dialogue_states[id(options)] = curr
+
     def execute_node(self, node):
         print(node)
         command, arguments = node
@@ -545,6 +562,8 @@ class BitsyPlayer:
                 if self.evaluate_condition(condition):
                     self.execute_node(block)
                     break
+        elif command == "CYCLE" or command == "SEQUENCE" or command == "SHUFFLE":
+            self.execute_list(command, arguments)
         else:
             print(command)
 
