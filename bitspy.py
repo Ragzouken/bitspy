@@ -645,6 +645,9 @@ class BitsyPlayer:
         self.generate_dialogue("".join(self.fragments))
 
     def generate_dialogue(self, text):
+        if not text.strip():
+            return
+
         lines = text.split("\n")
         rows = []
         limit = 32

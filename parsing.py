@@ -88,6 +88,8 @@ class DialogueParser:
             else:
                 chars.append(self.take())
 
+        chunks.append(make_say(chars))
+
         chunks2 = [""]
 
         for chunk in chunks:
