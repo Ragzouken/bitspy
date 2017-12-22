@@ -289,6 +289,12 @@ class BitsyPlayer:
         self.avatar_x = self.world["sprites"]["A"]["x"]
         self.avatar_y = self.world["sprites"]["A"]["y"]
 
+        for item in world["items"].itervalues():
+            variable = '{item "%s"}' % item["id"]
+
+            if variable not in world["variables"]:
+                world["variables"][variable] = 0
+
         self.set_room(self.world["sprites"]["A"]["room"])
 
         self.generate_dialogue(self.world["title"])
@@ -392,6 +398,9 @@ class BitsyPlayer:
             inventory[item_id] += 1
         else:
             inventory[item_id] = 1
+
+        variable = '{item "%s"}' % item_id
+        self.world["variables"][variable] += 1
 
         self.execute_dialogue(self.world["items"][item_id]["dialogue"])
 
@@ -550,27 +559,39 @@ class BitsyPlayer:
         return value
 
     def evaluate_expression(self, expression):
-        if type(expression) is str:
-            if expression.isdigit():
-                value = float(expression)
-            else:
-                value = self.world["variables"][expression]
-        else:
-            operator, a, b = expression
-            left = self.evaluate_expression(a)
-            right = self.evaluate_expression(b)
-            value = self.OPERATORS[operator](left, right)
+        command, values = expression[0], expression[1:]
 
-        return value
+        if command == "NUMBER" or command == "STRING":
+            return values[0]
+        elif command == "VARIABLE":
+            variable = values[0]
+
+            if not variable in self.world["variables"]:
+                self.world["variables"][variable] = 0
+
+            return self.world["variables"][variable]
+        elif command == "OPERATOR":
+            operator = values[0]
+            left = self.evaluate_expression(values[1])
+            right = self.evaluate_expression(values[2])
+            return self.OPERATORS[operator](left, right)
+        elif command == "FUNCTION":
+            return 0
+
+        print("???")
+        print(expression)
+        return 0
 
     def execute_list(self, type, options):
+        assert options, "trying to execute an empty %s!" % type
+
         if id(options) not in self.dialogue_states:
             self.dialogue_states[id(options)] = -1
 
         curr = self.dialogue_states[id(options)]
 
         if type == "SHUFFLE":
-            curr = random.randint(len(options))
+            curr = random.randint(0, len(options) - 1)
         elif type == "CYCLE":
             curr = (curr + 1) % len(options)
         elif type == "SEQUENCE":
@@ -592,7 +613,11 @@ class BitsyPlayer:
                 for argument in arguments:
                     self.execute_node(argument)
         elif command == "SAY":
-            self.fragments.append(arguments)
+            if type(arguments) == str:
+                self.fragments.append(arguments)
+            else:
+                value = self.evaluate_expression(arguments)
+                self.fragments.append(str(value))
         elif command == "SET":
             self.execute_set(node)
         elif command == "IF":
@@ -602,8 +627,10 @@ class BitsyPlayer:
                     break
         elif command == "CYCLE" or command == "SEQUENCE" or command == "SHUFFLE":
             self.execute_list(command, arguments)
+        elif command == "\n":
+            self.fragments.append("\n")
         else:
-            print(command)
+            pass#print(command)
 
     def execute_dialogue(self, id):
         dialogue = self.world["dialogues"][id]

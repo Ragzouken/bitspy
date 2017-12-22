@@ -4,9 +4,10 @@ import pprint
 import traceback
 
 LIST_TYPES = ["cycle", "shuffle", "sequence"]
-TAGS = ["wvy", "shk", "rbw", "clr1", "clr2", "clr3"]
+TAGS = ["wvy", "shk", "rbw", "clr1", "clr2", "clr3", "br"]
 COMPARISONS = [">=", "<=", ">", "<", "=="]
 OPERATORS = ["+", "-", "*", "/"]
+VARIABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_."
 
 def make_say(chars):
     if len(chars) == 0:
@@ -50,7 +51,7 @@ def print_dialogue(root, depth = 0):
                 print(indent("ELSE", depth))
         print(indent("END", depth))
     elif command == "SAY":
-        print(indent('"%s"', depth) % root[1])
+        print(indent('"%s"', depth) % (root[1],))
     elif command == "SET":
         print(indent("SET %s TO %s", depth) % (root[1], root[2]))
     elif command.lower() in LIST_TYPES:
@@ -67,8 +68,11 @@ class DialogueParser:
         self.text = text
         self.index = 0
         self.debug = debug
+        self.taken = []
 
     def print_rest(self):
+        print(self.text[:self.index])
+        print("XXX HERE XXX")
         print(self.text[self.index:])
 
     def parse(self):
@@ -110,34 +114,63 @@ class DialogueParser:
         chars = []
         chunks = []
 
-        command = "DO"
+        def flush_chars():
+            #chunks.append(self.parse_statement("".join(chars)))
+            try:
+                chunks.append(self.parse_statement("".join(chars)))
+            except:
+                print("-----")
+                traceback.print_exc()
+                self.print_rest()
+                print("-----")
+            del chars[:]
+
+        def skip_to_end():
+            skipped = []
+
+            while not self.check("}"):
+                if self.check("{"):
+                    print("SKIPPING: %s" % (self.parse_code_block(),))
+                else:
+                    skipped.append(self.take())
+
+            if skipped:
+                print("SKIPPED: %s" % "".join(skipped))
 
         self.skip_whitespace()
 
+        # either it's an if
         if self.check("-"):
-            command = "IF"
-            chunks.append(self.parse_if())
+            block = self.parse_if()
+            skip_to_end()
+            self.take("}")
+            return block
 
+        # or it's a sequence/cycle/shuffle
         for type in LIST_TYPES:
             if self.check(type):
-                command = type.upper()
-                chunks.append(self.parse_list(command))
-                break
+                block = self.parse_list(type.upper())
+                skip_to_end()
+                self.take("}")
+                return block
 
-        self.skip_whitespace()
-
+        # or it's a number of commands/nested code
         while not self.check("}"):
-            if self.check("{"):
-                chunks.extend(self.parse_statements("".join(chars)))
-                del chars[:]
-
+            # if an assigment or command didn't start yet, we can nest
+            if not chars and self.check("{"): # can only nest if nothing else appeared during this line
+                flush_chars()
                 chunks.append(self.parse_code_block())
+            # if a new line is starting, then the previous command is over
+            if self.check("\n"): # newline means statement ends
+                flush_chars()
+                self.skip_whitespace()
+            # read this command fully to find out what's going on
             else:
                 chars.append(self.take())
 
         self.take("}")
 
-        chunks.extend(self.parse_statements("".join(chars)))
+        flush_chars()
         chunks = clean_chunks(chunks)
 
         return ("DO", chunks)
@@ -252,6 +285,9 @@ class DialogueParser:
             return []
         elif text in TAGS:
             return (text.upper(),)
+        elif text.startswith("say"):
+            _, expression = text.split(" ", 1)
+            return ("SAY", self.parse_expression(expression))
 
         destination, expression = text.split("=", 1)
         expression = self.parse_expression(expression)
@@ -272,9 +308,82 @@ class DialogueParser:
 
         return None
 
+    def tokenise_expression(self, text):
+        input = list(reversed(text))
+        chars = []
+        tokens = []
+
+        def take_number():
+            del chars[:]
+            while input and input[-1].isdigit():
+                chars.append(input.pop())
+
+            value = float("".join(chars))
+            tokens.append(("NUMBER", value))
+
+        def is_variable_char(char):
+            return char in VARIABLE_CHARS
+
+        def take_variable():
+            del chars[:]
+
+            while input and is_variable_char(input[-1]):
+                chars.append(input.pop())
+
+            tokens.append(("VARIABLE", "".join(chars)))
+
+        def take_string():
+            del chars[:]
+
+            input.pop()
+
+            while input[-1] != '"':
+                chars.append(input.pop())
+
+            input.pop()
+
+            string = "".join(chars)
+            tokens.append(("STRING", string))
+
+        def take_function():
+            del chars[:]
+            
+            input.pop()
+            depth = 1
+
+            while input and depth > 0:
+                char = input.pop()
+
+                if char == "}":
+                    depth -= 1
+                elif char == "{":
+                    depth += 1
+                else:
+                    chars.append(char)
+
+            return tokens.append(("FUNCTION", "".join(chars))) 
+
+        while input:
+            if input[-1] == " ":
+                input.pop()
+            elif input[-1] == '"':
+                take_string()
+            elif input[-1].isdigit():
+                take_number()
+            elif input[-1] in OPERATORS:
+                tokens.append(("OPERATOR", input.pop()))
+            elif input[-1] == "{":
+                take_function()
+            elif is_variable_char(input[-1]):
+                take_variable()
+            else:
+                print("DUNNO: '%s' of '%s'" % (input.pop(), text) )
+
+        return tokens
+
     def parse_expression(self, text):
         text = text.strip()
-        parts = []
+        """parts = []
 
         while any(operator in text for operator in OPERATORS):
             for i in xrange(len(text)):
@@ -286,7 +395,9 @@ class DialogueParser:
                     parts.append(operator)
                     break
 
-        parts.append(text.strip())
+        parts.append(text.strip())"""
+
+        parts = self.tokenise_expression(text)
 
         output = []
         operators = []
@@ -295,10 +406,10 @@ class DialogueParser:
         while parts:
             token = parts.pop()
 
-            if token not in OPERATORS:
+            if token[0] != "OPERATOR":
                 output.append(token)
             else:
-                prec1 = OPERATORS.index(token)
+                prec1 = OPERATORS.index(token[1])
 
                 while operators and operators.index(operators[-1]) >= prec1:
                     output.append(operators.pop())
@@ -309,8 +420,10 @@ class DialogueParser:
             output.append(operators.pop())
 
         def combine():
-            if output[-1] in OPERATORS:
-                return [output.pop(), combine(), combine()]
+            if output[-1][0] == "OPERATOR":
+                _, operator = output.pop()
+
+                return ["OPERATOR", operator, combine(), combine()]
             else:
                 return output.pop()
 
@@ -356,6 +469,7 @@ class BitsyParser:
         self.lines = lines
         self.index = 0
         self.world = {
+            "title": None,
             "version": None,
             "flags": {},
             "palettes": {},
@@ -416,9 +530,16 @@ class BitsyParser:
             if sprite["dialogue"] is None and id in self.world["dialogues"]:
                 sprite["dialogue"] = id
 
+        for id, count in self.world["sprites"]["A"]["items"].iteritems():
+            variable = '{item "%s"}' % id
+            self.world["variables"][variable] = count
+
         if "global_walls_mod" in self.world:
             for id in self.world["global_walls_mod"]:
                 self.world["tiles"][id]["wall"] = True
+
+        if self.world["sprites"]["A"]["room"] is None:
+            self.world["sprites"]["A"]["room"] = "0"
 
     def take_line(self):        
         line = self.lines[self.index]
@@ -593,7 +714,7 @@ class BitsyParser:
 
         while self.check_line("ITM "):
             _, id, count = self.take_split(" ")
-            sprite["items"][id] = count
+            sprite["items"][id] = int(count)
 
         self.add_object("sprites", sprite)
 
@@ -654,7 +775,14 @@ class BitsyParser:
 
     def parse_variable(self):
         _, id = self.take_split(" ")
-        self.world["variables"][id] = float(self.take_line())
+        value = self.take_line()
+
+        try:
+            value = float(value)
+        except:
+            pass
+
+        self.world["variables"][id] = value
 
     def parse_graphic(self):
         graphic = [self.parse_frame()]

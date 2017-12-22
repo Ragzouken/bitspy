@@ -35,7 +35,7 @@ def read_index(file):
 
     return index
 
-def world(boid):
+def get_world(boid):
     entry = index[boid]
 
     try:
@@ -55,7 +55,7 @@ def world(boid):
 
 def worlds(index):
     for entry in index.itervalues():
-        world = world(entry["boid"])
+        world = get_world(entry["boid"])
 
         if world is not None:
             yield world
@@ -288,8 +288,8 @@ if __name__ == "__main__":
                         help='generate avatar collage')
     parser.add_argument('--dialogues', dest='dialogues', action='store_true',
                         help='output all dialogues')
-    parser.add_argument('--test', '-t', dest='test', action='store_true',
-                        help='test flotsam parsing...')
+    parser.add_argument('--test-dialogue', '-td', dest='test_dialogue', action='store_true',
+                        help='vaguely test all dialogues')
 
     args = parser.parse_args()
     
@@ -323,9 +323,19 @@ if __name__ == "__main__":
     if args.dialogues:
         print_dialogues()
 
-    if args.test:
-        for dialogue in world("010BEB39")["dialogues"].itervalues():
-            print_dialogue(dialogue["root"])
+    if args.test_dialogue:
+        from bitspy import BitsyPlayer
+        player = BitsyPlayer()
+
+        for world in worlds(index):
+            try:
+                player.change_world(world)
+                for id in world["dialogues"]:
+                    #print_dialogue(world["dialogues"][id]["root"])
+                    player.execute_dialogue(id)
+            except:
+                print("PROBLEM IN %s" % world["title"])
+                traceback.print_exc()
 
     """
     for row in reader:
