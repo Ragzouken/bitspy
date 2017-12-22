@@ -576,9 +576,24 @@ class BitsyPlayer:
             right = self.evaluate_expression(values[2])
             return self.OPERATORS[operator](left, right)
         elif command == "FUNCTION":
-            return 0
+            if values[0].startswith("item"):
+                _, string = values[0].split(" ", 1)
+                id = string.strip('"')
 
-        print("???")
+                for item in self.world["items"].itervalues():
+                    if item["name"] == id:
+                        id = item["id"]
+
+                inventory = self.world["sprites"]["A"]["items"]
+
+                if id in inventory:
+                    return inventory[id]
+                else:
+                    return 0
+            
+            return self.world["variables"][values[0]]
+
+        print("WARNING: didn't understand expression")
         print(expression)
         return 0
 
