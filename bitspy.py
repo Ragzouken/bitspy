@@ -5,6 +5,8 @@ import sys
 import os
 import traceback
 
+import operator
+
 from rendering import Renderer
 from parsing import BitsyParser
 from library import read_index
@@ -233,6 +235,19 @@ class Launcher:
         #    self.screen.fill(RENDERER.BLK, (8, 8, 256 - 16, 256 - 16))
 
 class BitsyPlayer:
+    OPERATORS = {
+        "+": operator.add,
+        "-": operator.sub,
+        "*": operator.mul,
+        "/": operator.div,
+
+        ">": operator.gt,
+        "<": operator.lt,
+        "==": operator.eq,
+        "<=": operator.le,
+        ">=": operator.ge,
+    }
+
     def __init__(self):
         self.screen = pygame.Surface((256, 256))
         self.dialog = pygame.Surface((208, 38))
@@ -519,13 +534,34 @@ class BitsyPlayer:
         return True
 
     def execute_set(self, set):
-        pass
+        _, dest, expression = set
+
+        self.world["variables"][dest] = self.evaluate_expression(expression)
 
     def evaluate_condition(self, condition):
-        if condition == "else":
+        if condition == "ELSE":
             return True
 
-        return False
+        operator, a, b = condition        
+        left = self.evaluate_expression(a)
+        right = self.evaluate_expression(b)
+        value = self.OPERATORS[operator](left, right)
+
+        return value
+
+    def evaluate_expression(self, expression):
+        if type(expression) is str:
+            if expression.isdigit():
+                value = float(expression)
+            else:
+                value = self.world["variables"][expression]
+        else:
+            operator, a, b = expression
+            left = self.evaluate_expression(a)
+            right = self.evaluate_expression(b)
+            value = self.OPERATORS[operator](left, right)
+
+        return value
 
     def execute_list(self, type, options):
         if id(options) not in self.dialogue_states:
@@ -544,8 +580,10 @@ class BitsyPlayer:
         self.dialogue_states[id(options)] = curr
 
     def execute_node(self, node):
-        print(node)
-        command, arguments = node
+        command = node[0]
+        
+        if len(node) > 1:
+            arguments = node[1]
 
         if command == "DO":
             if type(arguments) == str:
@@ -556,7 +594,7 @@ class BitsyPlayer:
         elif command == "SAY":
             self.fragments.append(arguments)
         elif command == "SET":
-            self.execute_set(arguments)
+            self.execute_set(node)
         elif command == "IF":
             for condition, block in arguments:
                 if self.evaluate_condition(condition):

@@ -654,7 +654,7 @@ class BitsyParser:
 
     def parse_variable(self):
         _, id = self.take_split(" ")
-        self.world["variables"][id] = self.take_line()
+        self.world["variables"][id] = float(self.take_line())
 
     def parse_graphic(self):
         graphic = [self.parse_frame()]
