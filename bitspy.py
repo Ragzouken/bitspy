@@ -17,7 +17,11 @@ from library import read_index
 SCREEN = (480, 272)
 ALIGN = 0 # "LEFT" "CENTER" "RIGHT"
 ROTATE = 1 # 0 1 2 3
+
 TEXT_DELAY = 50 #ms
+CLOCK_DELAY = 200
+FPS = 20
+
 SHOW_FPS = False
 KEY_BINDINGS = {
     pygame.K_KP2: "RIGHT",
@@ -40,8 +44,6 @@ KEY_BINDINGS = {
     pygame.K_1: "ROTATE",
     pygame.K_2: "ALIGN",
 }
-
-FPS = 15
 ##########
 
 ROOT = os.path.dirname(__file__)
@@ -345,11 +347,14 @@ class BitsyPlayer:
         self.draw(self.prev_frame)
 
     def set_frame_count(self, frame_count):
-        next_frame = (frame_count // 6) % 2
+        next_frame = (frame_count // 2) % 2
 
         if next_frame != self.prev_frame:
             self.draw(next_frame)
-        elif self.dialogue_lines and self.draw_next_char():
+    
+        if self.dialogue_lines:
+            self.draw_next_char()
+            self.update_dialogue()
             self.draw_dialog()
 
     def draw(self, frame):
@@ -367,6 +372,8 @@ class BitsyPlayer:
             self.draw_dialog()
 
     def draw_dialog(self):
+        self.update_dialogue()
+
         d_x = 24
         d_y = 24
 
@@ -528,8 +535,6 @@ class BitsyPlayer:
     def draw_next_char(self):
         self.dialogue_char += 1
 
-        self.draw_dialogue(self.dialogue_char)
-
         return self.dialogue_char < sum(len(line) for line in self.dialogue_lines)
 
     def get_rainbow_color(self, time, x):
@@ -538,12 +543,13 @@ class BitsyPlayer:
 
         return tuple(c * 255 for c in rgb)
 
-    def draw_dialogue(self, limit):
+    def update_dialogue(self):
         def disturb(func, time, offset, mult1, mult2):
             return func(time * mult1 - offset * mult2)
 
         self.dialog.fill(RENDERER.BLK)
 
+        limit = self.dialogue_char
         xoff = 8
         yoff = 8
         xspace = 6
@@ -910,22 +916,23 @@ def capture_bg():
                     (sx * 16, sy * 16),
                     (dx * 16, dy * 16, 16, 16))
 
-ANIM = 0
-
 def switch_focus(thing):
     global FOCUS
     FOCUS = thing
 
 def game_loop():
-    global ROTATE, ALIGN, RESTART, EXIT, ANIM
+    global ROTATE, ALIGN, RESTART, EXIT
 
     action = None
     pressed = False
+    ANIM = 0
 
     launcher.render_page()
     debugmenu.render()
 
     #get_avatars()
+
+    game_clock = pygame.time.get_ticks()
 
     while not EXIT:
         for event in pygame.event.get():
@@ -962,7 +969,13 @@ def game_loop():
                     action = None
                     pressed = False
 
-        if ANIM % 3 == 0:
+        time = pygame.time.get_ticks()
+
+        if time - game_clock >= CLOCK_DELAY:
+            game_clock += CLOCK_DELAY
+
+            ANIM += 1
+
             down = pygame.key.get_pressed()
 
             for key, val in KEY_BINDINGS.iteritems():
@@ -983,7 +996,6 @@ def game_loop():
         draw()
         
         clock.tick(FPS)
-        ANIM += 1
 
     pygame.mouse.set_visible(True)
     pygame.quit()
