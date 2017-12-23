@@ -18,6 +18,7 @@ SCREEN = (480, 272)
 ALIGN = 0 # "LEFT" "CENTER" "RIGHT"
 ROTATE = 1 # 0 1 2 3
 TEXT_DELAY = 50 #ms
+SHOW_FPS = False
 KEY_BINDINGS = {
     pygame.K_KP2: "RIGHT",
     pygame.K_KP5: "DOWN",
@@ -74,7 +75,7 @@ def restart_program():
 class DebugMenu:
     def __init__(self):
         self.screen = pygame.Surface((128, 128))
-        self.options = ["rotate", "align", "update"]
+        self.options = ["rotate", "align", "show fps", "update"]
         self.index = 0
 
     def input(self, action, pressed):
@@ -90,7 +91,7 @@ class DebugMenu:
         self.render()
 
     def do_selected(self, left):
-        global ROTATE, ALIGN
+        global ROTATE, ALIGN, SHOW_FPS
 
         selected = self.options[self.index]
 
@@ -107,6 +108,8 @@ class DebugMenu:
             clear_screen()
         elif selected == "update":
             update_and_restart()
+        elif selected == "show fps":
+            SHOW_FPS = not SHOW_FPS
 
     def render(self):
         self.screen.fill(RENDERER.BLK)
@@ -858,6 +861,10 @@ def draw():
         player.screen.blit(launcher.screen, (0, 0))
     elif FOCUS == debugmenu:
         debugmenu.draw(player.screen)
+
+    if SHOW_FPS:
+        fps = str(round(clock.get_fps(), 1))
+        RENDERER.font.render_text_line(player.screen, fps, 2, 2, RENDERER.BLK)
 
     screen2 = pygame.transform.rotate(player.screen, -90 * ROTATE)
     #screen2 = pygame.transform.scale2x(screen2)
