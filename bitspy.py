@@ -269,7 +269,6 @@ class BitsyPlayer:
 
         self.dialogue_lines = []
         self.dialogue_char = 0
-        self.dialogue_lines_rich = []
         self.dialogue_style = {"shk": False, "wvy": False, "rbw": False, "clr": 0}
 
         self.starting = False
@@ -537,6 +536,9 @@ class BitsyPlayer:
         return tuple(c * 255 for c in rgb)
 
     def draw_dialogue(self, limit):
+        def disturb(func, time, offset, mult1, mult2):
+            return func(time * mult1 - offset * mult2)
+
         self.dialog.fill(RENDERER.BLK)
 
         xoff = 8
@@ -553,16 +555,30 @@ class BitsyPlayer:
                     cut = True
                     break
 
+                time = pygame.time.get_ticks()
                 color = None
                 char, style = cell
 
+                ox, oy = 0, 0
+
+                if style["wvy"]:
+                    oy += math.sin((time / 250.0) - (x / 2.0)) * 4;
+                if style["shk"]:
+                    oy += (3
+                        * disturb(math.sin,time,x,0.1,0.5)
+                        * disturb(math.cos,time,x,0.3,0.2)
+                        * disturb(math.sin,time,y,2.0,1.0))
+                    ox += (3
+                        * disturb(math.cos,time,y,0.1,1.0)
+                        * disturb(math.sin,time,x,3.0,0.7)
+                        * disturb(math.cos,time,x,0.2,0.3))
                 if style["rbw"]:
-                    color = self.get_rainbow_color(pygame.time.get_ticks(), x)
+                    color = self.get_rainbow_color(time, x)
                 if style["clr"] > 0:
                     color = self.palette[style["clr"] - 1]
 
                 glyph = RENDERER.font.get_glyph(char, color)
-                position = (xoff + x * xspace, yoff + y * yspace)
+                position = (xoff + x * xspace + int(ox), yoff + y * yspace + int(oy))
 
                 self.dialog.blit(glyph, position)
 
@@ -725,15 +741,18 @@ class BitsyPlayer:
         else:
             self.execute_node(root)
 
-        #print(self.dialogue_lines)
+        self.word_wrap_dialogue()
+        self.debug_dialogue()
+
+    def debug_dialogue(self):
+        for line in self.dialogue_lines:
+            print("".join(c[0] for c in line))
 
     def buffer_dialogue(self, *chars):
         if self.dialogue_lines:
             row = self.dialogue_lines.pop()
         else:
             row = []
-
-        limit = 32
 
         for char in chars:
             if char == "\n":
@@ -744,6 +763,31 @@ class BitsyPlayer:
 
         if row:
             self.dialogue_lines.append(row)
+
+    def word_wrap_dialogue(self):
+        y = 0
+
+        while y < len(self.dialogue_lines):
+            row = self.dialogue_lines[y]
+
+            if len(row) > 32:
+                split = 32
+
+                for x in reversed(xrange(31)):
+                    if row[x][0] == " ":
+                        split = x
+                        break
+
+                remainder = row[split:]
+
+                if remainder[0][0] == " ":
+                    del remainder[0]
+
+                self.dialogue_lines.insert(y + 1, remainder)
+
+                del row[split:]
+
+            y += 1
 
 def load_file(name):
     file = os.path.join(ROOT, "games", name + ".bitsy.txt")
