@@ -742,7 +742,7 @@ class BitsyPlayer:
             self.execute_node(root)
 
         self.word_wrap_dialogue()
-        self.debug_dialogue()
+        #self.debug_dialogue()
 
     def debug_dialogue(self):
         for line in self.dialogue_lines:
@@ -761,8 +761,7 @@ class BitsyPlayer:
             else:
                 row.append((char, self.dialogue_style))
 
-        if row:
-            self.dialogue_lines.append(row)
+        self.dialogue_lines.append(row)
 
     def word_wrap_dialogue(self):
         y = 0

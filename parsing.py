@@ -177,9 +177,20 @@ class DialogueParser:
 
         return ("DO", chunks)
 
-    def skip_whitespace(self):
-        while self.check(" ", "\t", "\n"):
+    def skip(self, *chars):
+        while self.check(*chars):
             self.take()
+
+    def skip_whitespace(self):
+        lines = 0
+
+        while self.check(" ", "\t", "\n"):
+            if self.check("\n"):
+                lines += 1
+
+            self.take()
+
+        return lines
 
     def parse_list_entry(self):
         self.skip_whitespace()
@@ -242,7 +253,7 @@ class DialogueParser:
 
         if self.check("\n"):
             self.take("\n")
-            self.skip_whitespace()
+            self.skip(" ")
 
         while not self.check("}"):
             if self.check("{"):
@@ -252,7 +263,7 @@ class DialogueParser:
                 chunks.append(self.parse_code_block())
             elif self.check("\n"):
                 self.take("\n")
-                self.skip_whitespace()
+                self.skip(" ")
 
                 if self.check("-") or self.check("}"):
                     break
