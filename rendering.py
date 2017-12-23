@@ -23,6 +23,8 @@ def recolor_surface(surface, palette):
     del pixels
 
 class BitsyFontRender:
+    BUFFER = pygame.Surface((6, 8))
+
     def __init__(self):
         self.font = [pygame.Surface((6, 8)) for i in xrange(256)]
 
@@ -38,6 +40,18 @@ class BitsyFontRender:
 
         for i, c in enumerate(text):
             surface.blit(self.font[ord(c)], (i * 6 + x, y))
+
+    def get_glyph(self, character, color = None):
+        glyph = self.font[ord(character)]
+
+        if color:
+            self.BUFFER.blit(glyph, (0, 0))
+            glyph = self.BUFFER
+            pixels = pygame.PixelArray(self.BUFFER)
+            pixels.replace(WHT, color)
+            del pixels
+
+        return glyph
 
 class Renderer:
     BLK = 0x000000

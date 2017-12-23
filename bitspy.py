@@ -1,5 +1,7 @@
 import pygame
 import random
+import colorsys
+import math
 import glob
 import sys
 import os
@@ -267,6 +269,8 @@ class BitsyPlayer:
 
         self.dialogue_lines = []
         self.dialogue_char = 0
+        self.dialogue_lines_rich = []
+        self.dialogue_style = {"shk": False, "wvy": False, "rbw": False, "clr": 0}
 
         self.starting = False
         self.ending = False
@@ -297,7 +301,7 @@ class BitsyPlayer:
 
         self.set_room(self.world["sprites"]["A"]["room"])
 
-        self.generate_dialogue(self.world["title"])
+        self.buffer_dialogue(*self.world["title"])
 
     def get_room_from_id(self, id):
         return self.world["rooms"][id]
@@ -385,7 +389,9 @@ class BitsyPlayer:
         self.set_room(dest["room"])
 
     def use_ending(self, ending):
-        self.generate_dialogue(self.world["endings"][ending["id"]]["text"])
+        if ending["id"] in self.world["endings"]:
+            self.buffer_dialogue(*self.world["endings"][ending["id"]]["text"])
+
         self.ending = True
 
     def take_item(self, item):
@@ -518,29 +524,52 @@ class BitsyPlayer:
         return skipped
 
     def draw_next_char(self):
+        self.dialogue_char += 1
+
+        self.draw_dialogue(self.dialogue_char)
+
+        return self.dialogue_char < sum(len(line) for line in self.dialogue_lines)
+
+    def get_rainbow_color(self, time, x):
+        hue = abs(math.sin((time / 600.0) - (x / 8.0)))
+        rgb = colorsys.hsv_to_rgb(hue, 1, 1)
+
+        return tuple(c * 255 for c in rgb)
+
+    def draw_dialogue(self, limit):
+        self.dialog.fill(RENDERER.BLK)
+
         xoff = 8
         yoff = 8
-        chars = 32
-        demo = "".join(line.ljust(chars) for line in self.dialogue_lines[:2])
-        demo = demo[:chars*2]
+        xspace = 6
+        yspace = 8 + 4
+        count = 0
 
-        if self.dialogue_char >= len(demo):
-            return False
+        cut = False
 
-        x = self.dialogue_char % 32
-        y = self.dialogue_char // 32
+        for y, line in enumerate(self.dialogue_lines[:2]):
+            for x, cell in enumerate(line):
+                if count >= limit:
+                    cut = True
+                    break
 
-        c = demo[self.dialogue_char]
-        self.dialog.blit(RENDERER.font.font[ord(c)], (xoff + x * 6, yoff + y * (8 + 4)))
+                color = None
+                char, style = cell
 
-        self.dialogue_char += 1 
-        while self.dialogue_char < len(demo) and demo[self.dialogue_char].strip() == "":
-            self.dialogue_char += 1 
+                if style["rbw"]:
+                    color = self.get_rainbow_color(pygame.time.get_ticks(), x)
+                if style["clr"] > 0:
+                    color = self.palette[style["clr"] - 1]
 
-        if self.dialogue_char == len(demo):
-            self.dialog.blit(RENDERER.arrow, (xoff + 182, yoff + 20)) 
+                glyph = RENDERER.font.get_glyph(char, color)
+                position = (xoff + x * xspace, yoff + y * yspace)
 
-        return True
+                self.dialog.blit(glyph, position)
+
+                count += 1
+
+        if not cut:
+            self.dialog.blit(RENDERER.arrow, (xoff + 182, yoff + 20))
 
     def execute_set(self, set):
         _, dest, expression = set
@@ -615,6 +644,9 @@ class BitsyPlayer:
         self.execute_node(options[curr])
         self.dialogue_states[id(options)] = curr
 
+    def style_text(self, text, style):
+        return [(char, style) for char in text]
+
     def execute_node(self, node):
         command = node[0]
         
@@ -629,10 +661,12 @@ class BitsyPlayer:
                     self.execute_node(argument)
         elif command == "SAY":
             if type(arguments) == str:
-                self.fragments.append(arguments)
+                text = arguments
             else:
                 value = self.evaluate_expression(arguments)
-                self.fragments.append(str(value))
+                text = str(value)
+
+            self.buffer_dialogue(*text)
         elif command == "SET":
             self.execute_set(node)
         elif command == "IF":
@@ -643,53 +677,73 @@ class BitsyPlayer:
         elif command == "CYCLE" or command == "SEQUENCE" or command == "SHUFFLE":
             self.execute_list(command, arguments)
         elif command == "\n":
-            self.fragments.append("\n")
+            self.buffer_dialogue("\n")
+        elif command == "SHK":
+            self.toggle_dialogue_style("shk")
+        elif command == "WVY":
+            self.toggle_dialogue_style("wvy")
+        elif command == "RBW":
+            self.toggle_dialogue_style("rbw")
+        elif command == "BR":
+            self.buffer_dialogue("\n")
+        elif command == "CLR1":
+            self.set_dialogue_color(1)
+        elif command == "CLR2":
+            self.set_dialogue_color(2)
+        elif command == "CLR3":
+            self.set_dialogue_color(3)
         else:
-            pass#print(command)
+            print(command)
+
+    def toggle_dialogue_style(self, style):
+        self.dialogue_style = dict(self.dialogue_style)
+        self.dialogue_style[style] = not self.dialogue_style[style]
+
+    def set_dialogue_style(self, **kwargs):
+        self.dialogue_style = dict(self.dialogue_style)
+
+        for key, value in kwargs.iteritems():
+            self.dialogue_style[key] = value
+
+    def set_dialogue_color(self, color):
+        self.dialogue_style = dict(self.dialogue_style)
+
+        if self.dialogue_style["clr"] == color:
+            self.dialogue_style["clr"] = 0
+        else:
+            self.dialogue_style["clr"] = color
 
     def execute_dialogue(self, id):
         dialogue = self.world["dialogues"][id]
         root = dialogue["root"]
 
+        # reset formatting
+        self.set_dialogue_style(shk = False, wvy = False, rbw = False, clr = 0)
+
         if root is None:
-            return self.generate_dialogue(dialogue["text"])
+            self.buffer_dialogue(*dialogue["text"])
+        else:
+            self.execute_node(root)
 
-        self.fragments = []
+        #print(self.dialogue_lines)
 
-        self.execute_node(root)
-        self.generate_dialogue("".join(self.fragments))
+    def buffer_dialogue(self, *chars):
+        if self.dialogue_lines:
+            row = self.dialogue_lines.pop()
+        else:
+            row = []
 
-    def generate_dialogue(self, text):
-        if not text.strip():
-            return
-
-        lines = text.split("\n")
-        rows = []
         limit = 32
 
-        for line in lines:
-            if len(line) > limit:
-                row = ""
-                words = line.split(" ")
-                next = 0
-
-                while next < len(words):
-                    if len(row) + 1 + len(words[next]) > limit:
-                        rows.append(row)
-                        row = words[next]
-                    elif row:
-                        row += " " + words[next]
-                    else:
-                        row = words[next]
-
-                    next += 1 
-
-                if row:
-                    rows.append(row)
+        for char in chars:
+            if char == "\n":
+                self.dialogue_lines.append(row)
+                row = []
             else:
-                rows.append(line)
+                row.append((char, self.dialogue_style))
 
-        self.dialogue_lines.extend(rows)
+        if row:
+            self.dialogue_lines.append(row)
 
 def load_file(name):
     file = os.path.join(ROOT, "games", name + ".bitsy.txt")
@@ -806,16 +860,17 @@ def capture_bg():
                     (sx * 16, sy * 16),
                     (dx * 16, dy * 16, 16, 16))
 
+ANIM = 0
+
 def switch_focus(thing):
     global FOCUS
     FOCUS = thing
 
 def game_loop():
-    global ROTATE, ALIGN, RESTART, EXIT
+    global ROTATE, ALIGN, RESTART, EXIT, ANIM
 
     action = None
     pressed = False
-    anim = 0
 
     launcher.render_page()
     debugmenu.render()
@@ -857,7 +912,7 @@ def game_loop():
                     action = None
                     pressed = False
 
-        if anim % 3 == 0:
+        if ANIM % 3 == 0:
             down = pygame.key.get_pressed()
 
             for key, val in KEY_BINDINGS.iteritems():
@@ -873,12 +928,12 @@ def game_loop():
             pressed = False
 
         if not player.ended:
-            player.set_frame_count(anim)
+            player.set_frame_count(ANIM)
         
         draw()
         
         clock.tick(FPS)
-        anim += 1
+        ANIM += 1
 
     pygame.mouse.set_visible(True)
     pygame.quit()
