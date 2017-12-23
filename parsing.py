@@ -7,7 +7,7 @@ LIST_TYPES = ["cycle", "shuffle", "sequence"]
 TAGS = ["wvy", "shk", "rbw", "clr1", "clr2", "clr3", "br"]
 COMPARISONS = [">=", "<=", ">", "<", "=="]
 OPERATORS = ["+", "-", "*", "/"]
-VARIABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_."
+VARIABLE_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_.0123456789"
 
 def make_say(chars):
     if len(chars) == 0:
