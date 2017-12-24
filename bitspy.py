@@ -305,7 +305,8 @@ class BitsyPlayer:
 
         self.set_room(self.world["sprites"]["A"]["room"])
 
-        self.buffer_dialogue(*self.world["title"])
+        self.execute_script(self.world["title"])
+        #self.buffer_dialogue(*self.world["title"])
 
     def get_room_from_id(self, id):
         return self.world["rooms"][id]
@@ -399,7 +400,8 @@ class BitsyPlayer:
 
     def use_ending(self, ending):
         if ending["id"] in self.world["endings"]:
-            self.buffer_dialogue(*self.world["endings"][ending["id"]]["text"])
+            self.execute_script(self.world["endings"][ending["id"]]["text"])
+            #self.buffer_dialogue(*self.world["endings"][ending["id"]]["text"])
 
         self.ending = True
 
@@ -742,16 +744,19 @@ class BitsyPlayer:
         dialogue = self.world["dialogues"][id]
         root = dialogue["root"]
 
-        # reset formatting
-        self.set_dialogue_style(shk = False, wvy = False, rbw = False, clr = 0)
-
         if root is None:
+            self.set_dialogue_style(shk = False, wvy = False, rbw = False, clr = 0)
             self.buffer_dialogue(*dialogue["text"])
+            self.word_wrap_dialogue()
         else:
-            self.execute_node(root)
+            self.execute_script(root)
 
-        self.word_wrap_dialogue()
         #self.debug_dialogue()
+
+    def execute_script(self, root):
+        self.set_dialogue_style(shk = False, wvy = False, rbw = False, clr = 0)
+        self.execute_node(root)
+        self.word_wrap_dialogue()
 
     def debug_dialogue(self):
         for line in self.dialogue_lines:

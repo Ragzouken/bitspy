@@ -498,6 +498,13 @@ class BitsyParser:
     def add_object(self, type, object):
         self.world[type][object["id"]] = object
 
+    def try_parse(self, text):
+        try:
+            parser = DialogueParser(text)
+            return parser.parse()
+        except:
+            return ("SAY", text)
+
     def parse(self, silent = False):
         if not any(line.strip() for line in self.lines):
             return
@@ -505,7 +512,7 @@ class BitsyParser:
         if not self.peek_line().strip():
             self.take_line()
 
-        self.world["title"] = self.take_line()
+        self.world["title"] = self.try_parse(self.take_line())
 
         while self.index < len(self.lines):
             if self.check_line("# BITSY VERSION"):
@@ -688,7 +695,7 @@ class BitsyParser:
         ending = {}
 
         _, ending["id"] = self.take_split(" ")
-        ending["text"] = self.take_line()
+        ending["text"] = self.try_parse(self.take_line())
 
         self.add_object("endings", ending)
 
