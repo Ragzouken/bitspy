@@ -292,6 +292,7 @@ class BitsyPlayer:
         self.ended = False
 
         self.world = world
+        self.perturb_palettes()
         self.renderer.prerender_world(world)
 
         self.avatar_x = self.world["sprites"]["A"]["x"]
@@ -307,6 +308,12 @@ class BitsyPlayer:
 
         self.execute_script(self.world["title"])
         #self.buffer_dialogue(*self.world["title"])
+
+    # because i use some fixed color replacements, need to make sure no palette
+    # contains them...
+    def perturb_palettes(self):
+        for palette in self.world["palettes"].itervalues():
+            palette["colors"] =  [self.renderer.perturb_color(color) for color in palette["colors"]]
 
     def get_room_from_id(self, id):
         return self.world["rooms"][id]

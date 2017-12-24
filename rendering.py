@@ -2,9 +2,9 @@ import pygame
 
 BLK = 0x000000
 WHT = 0xFFFFFF
-BGR = 0x999999
-TIL = 0xFF0000
-SPR = 0xFFFFFF
+BGR = 0x009999
+TIL = 0x0000FF
+SPR = 0x00FFFF
 
 def render_data_to_surface(surface, data, foreground, background):
     pixels = pygame.PixelArray(surface)
@@ -54,11 +54,11 @@ class BitsyFontRender:
         return glyph
 
 class Renderer:
-    BLK = 0x000000
-    WHT = 0xFFFFFF
-    BGR = 0x999999
-    TIL = 0xFF0000
-    SPR = 0xFFFFFF
+    BLK = BLK
+    WHT = WHT
+    BGR = BGR
+    TIL = TIL
+    SPR = SPR
 
     def __init__(self):
         self.font = BitsyFontRender()
@@ -101,3 +101,11 @@ class Renderer:
         self.render_frame_to_surface(renders[1], graphic[-1], foreground, background)
 
         self.renders[id] = renders
+
+    def perturb_color(self, color):
+        r, g, b = color
+
+        if r == 0: 
+            r = 1
+
+        return (r, g, b)
