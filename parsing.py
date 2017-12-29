@@ -328,6 +328,9 @@ class DialogueParser:
 
         def take_number():
             del chars[:]
+
+            if input and input[-1] == "-":
+                chars.append(input.pop())
             while input and input[-1].isdigit():
                 chars.append(input.pop())
 
@@ -381,7 +384,7 @@ class DialogueParser:
                 input.pop()
             elif input[-1] == '"':
                 take_string()
-            elif input[-1].isdigit():
+            elif input[-1].isdigit() or (input[-1] == "-" and input[-2].isdigit()):
                 take_number()
             elif input[-1] in OPERATORS:
                 tokens.append(("OPERATOR", input.pop()))
