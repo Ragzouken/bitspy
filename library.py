@@ -11,6 +11,7 @@ from StringIO import StringIO
 from parsing import BitsyParser, print_dialogue
 from rendering import Renderer
 from collections import OrderedDict
+from shutil import copy
 
 ROOT = os.path.dirname(__file__)
 
@@ -34,6 +35,23 @@ def read_index(file):
         }
 
     return index
+
+def read_auth(file):
+    reader = csv.reader(file)
+    reader.next()
+
+    entries = []
+
+    for row in reader:
+        author, library, archive = row[:3]
+
+        entries.append({
+            "author": author,
+            "library": library == "X",
+            "archive": archive == "X",
+        })
+
+    return entries
 
 def get_world(boid):
     entry = index[boid]
@@ -216,7 +234,7 @@ def draw_avatars():
     renderer = Renderer()
 
     width = 35
-    height = 13
+    height = 16
 
     gap = 0
 
@@ -290,6 +308,8 @@ if __name__ == "__main__":
                         help='output all dialogues')
     parser.add_argument('--test-dialogue', '-td', dest='test_dialogue', action='store_true',
                         help='vaguely test all dialogues')
+    parser.add_argument('--archive', dest='archive', action='store_true',
+                        help='copy archiveable games')
 
     args = parser.parse_args()
     
@@ -336,6 +356,45 @@ if __name__ == "__main__":
             except:
                 print("PROBLEM IN %s" % world["title"])
                 traceback.print_exc()
+
+    if args.archive:
+        authors = os.path.join(root, "authors.txt")
+        content = open(authors, "r+").read()
+        permissions = read_auth(StringIO(content))
+
+        archiveable = {}
+        missing = {}
+        count = 0
+
+        for entry in permissions:
+            if entry["archive"]:
+                archiveable[entry["author"]] = True
+
+        for entry in index.itervalues():
+            credit = entry["credit"]
+
+            if credit in archiveable:
+                print(entry["title"])
+                count += 1
+                src = os.path.join(ROOT, "library", "%s.bitsy.txt" % entry["boid"])
+                copy(src, os.path.join(root, "archive/"))
+            else:
+                if credit not in missing:
+                    missing[credit] = 0
+
+                missing[credit] += 1
+
+        print(count)
+
+        m = []
+
+        for credit, count in missing.iteritems():
+            m.append("%s,%s" % (count, credit))
+
+        m.sort(key = lambda pair: pair[0], reverse = True)
+
+        open(os.path.join(root, "missing.txt"), "w").write("\n".join(m))
+
 
     """
     for row in reader:
