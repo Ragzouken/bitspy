@@ -6,12 +6,13 @@ import urllib2
 import csv
 import webbrowser
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from StringIO import StringIO
 from parsing import BitsyParser, print_dialogue
 from rendering import Renderer
 from collections import OrderedDict
 from shutil import copy
+import pygame
 
 ROOT = os.path.dirname(__file__)
 
@@ -227,15 +228,44 @@ def get_version(entry):
 
     return "0"
 
-def draw_avatars():
-    import pygame
+def get_palette(world):
+    palettes = world["palettes"]
+
+    if "0" in palettes:
+        palette = palettes["0"]
+    else:
+        palette = palettes.iteritems().next()
+
+    if palette["colors"][0] == palette["colors"][2]:
+        print("bad first palette")
+
+        for id, pal in palettes.iteritems():
+            if pal["colors"][0] != pal["colors"][2]:
+                palette = pal
+                print("FIXED")
+                break
+
+    return palette
+
+def get_avatar_frames(renderer, world):
+    graphic = world["sprites"]["A"]["graphic"]
+    frame1, frame2 = pygame.Surface((16, 16)), pygame.Surface((16, 16))
+
+    palette = get_palette(world)
+
+    renderer.render_frame_to_surface(frame1, graphic[ 0], renderer.SPR, renderer.BGR)
+    renderer.render_frame_to_surface(frame2, graphic[-1], renderer.SPR, renderer.BGR)
+    renderer.recolor_surface(frame1, palette["colors"])
+    renderer.recolor_surface(frame2, palette["colors"])
+
+    return frame1, frame2
+
+def draw_avatars_timeline(dates):
     pygame.init()
 
     renderer = Renderer()
-
-    width = 35
-    height = 16
-
+    width = max(len(date[1]) for date in dates)
+    height = len(dates)
     gap = 0
 
     page1 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
@@ -244,40 +274,88 @@ def draw_avatars():
     values1 = []
     values2 = []
 
-    for entry in sorted(index.itervalues(), key=lambda x: x["date"]):
+    maps = []
+
+    for y, row in enumerate(dates):
+        for x, entry in enumerate(row[1]):
+            i = y * width + x
+            pos = (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap)
+
+            try:
+                world = get_world(entry["boid"])
+                frame1, frame2 = get_avatar_frames(renderer, world)
+
+                page1.blit(frame1, pos)
+                page2.blit(frame2, pos)
+            except Exception as e:
+                print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
+                
+    pygame.image.save(page1, "timeline1.png")
+    pygame.image.save(page2, "timeline2.png")
+
+def draw_avatars():
+    pygame.init()
+
+    renderer = Renderer()
+
+    width = 35
+    height = 18
+
+    gap = 0
+
+    page1 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
+    page2 = pygame.Surface((width * (8 * 2 + gap) + gap, height * (8 * 2 + gap) + gap))
+
+    values1 = []
+    values2 = []
+    urls = []
+    titles = []
+
+    for entry in index.itervalues():
         try:
-            dest = os.path.join(ROOT, "library", "%s.bitsy.txt" % entry["boid"])
+            world = get_world(entry["boid"])
 
-            with open(dest, "rb") as file:
-                data = file.read().replace("\r\n", "\n")
-                lines = data.split("\n")
-                parser = BitsyParser(lines)
-                parser.parse(silent = True)
-                if len(parser.world["tiles"]) > 0:
-                    graphic = parser.world["sprites"]["A"]["graphic"]
-                    frame1, frame2 = pygame.Surface((16, 16)), pygame.Surface((16, 16))
+            if len(world["tiles"]) > 0:
+                frame1, frame2 = get_avatar_frames(renderer, world)
 
-                    renderer.render_frame_to_surface(frame1, graphic[ 0], renderer.SPR, renderer.BGR)
-                    renderer.render_frame_to_surface(frame2, graphic[-1], renderer.SPR, renderer.BGR)
-                    renderer.recolor_surface(frame1, parser.world["palettes"]["0"]["colors"])
-                    renderer.recolor_surface(frame2, parser.world["palettes"]["0"]["colors"])
-                    values1.append(frame1)
-                    values2.append(frame2)
-                #if len(parser.world["tiles"]) > 0:
-                #    values.append(world_contains_frame(parser.world, cat))
+                values1.append(frame1)
+                values2.append(frame2)
+                urls.append(entry["url"])
+                titles.append(entry["title"])
         except Exception as e:
             print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
             traceback.print_exc()
+
+    maps = []
 
     for y in xrange(height):
         for x in xrange(width):
             if y * width + x >= len(values1):
                 break
-            page1.blit(values1[y * width + x], (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap))
-            page2.blit(values2[y * width + x], (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap))
+
+            i = y * width + x
+            pos = (x * (8 * 2 + gap) + gap, y * (8 * 2 + gap) + gap)
+
+            page1.blit(values1[i], pos)
+            page2.blit(values2[i], pos)
+
+            maps.append((pos, urls[i], titles[i]))
 
     pygame.image.save(page1, "avatars1.png")
     pygame.image.save(page2, "avatars2.png")
+
+    with open("avatars.html", "w") as html:
+        html.write('<html><body><img src="avatars.gif" usemap="#avatars">\n')
+        html.write('<map name="avatars">\n')
+
+        for map in maps:
+            pos, url, title = map
+            x, y = pos
+
+            html.write('<area shape="rect" coords="%s,%s,%s,%s" href="%s" title="%s">\n' % (x, y, x + 16, y + 16, url, title))
+
+        html.write("</map>\n")
+        html.write("</body></html>\n")
 
 def print_dialogues():
     with open("dialogues.txt", "w") as file:
@@ -310,6 +388,8 @@ if __name__ == "__main__":
                         help='vaguely test all dialogues')
     parser.add_argument('--archive', dest='archive', action='store_true',
                         help='copy archiveable games')
+    parser.add_argument('--date', dest='date', action='store_true',
+                        help='show avatars as histogram of date')
 
     args = parser.parse_args()
     
@@ -339,6 +419,24 @@ if __name__ == "__main__":
 
     if args.avatars:
         draw_avatars()
+
+    if args.date:
+        first = min(entry["date"] for entry in index.itervalues())
+        last = max(entry["date"] for entry in index.itervalues())
+        now = first
+
+        print(first, last)
+        print(last - first)
+        dates = []
+
+        while now <= last:
+            entries = [entry for entry in index.itervalues() if entry["date"] == now]
+
+            dates.append((now, entries))
+
+            now += timedelta(days=1)
+
+        draw_avatars_timeline(dates)
 
     if args.dialogues:
         print_dialogues()
