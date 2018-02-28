@@ -743,7 +743,9 @@ class BitsyParser:
         self.add_object("sprites", sprite)
 
     def parse_item(self):
-        item = {}
+        item = {
+            "dialogue": None,
+        }
 
         #print(self.peek_line())
 

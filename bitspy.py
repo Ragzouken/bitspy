@@ -427,7 +427,7 @@ class BitsyPlayer:
 
         variable = '{item "%s"}' % item_id
         self.world["variables"][variable] += 1
-
+        
         self.execute_dialogue(self.world["items"][item_id]["dialogue"])
 
     def get_tile_from_id(self, tile_id):
@@ -750,6 +750,9 @@ class BitsyPlayer:
             self.dialogue_style["clr"] = color
 
     def execute_dialogue(self, id):
+        if id is None:
+            return False
+
         dialogue = self.world["dialogues"][id]
         root = dialogue["root"]
 
@@ -759,6 +762,8 @@ class BitsyPlayer:
             self.word_wrap_dialogue()
         else:
             self.execute_script(root)
+
+        return True
 
         #self.debug_dialogue()
 
