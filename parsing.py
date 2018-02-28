@@ -195,7 +195,9 @@ class DialogueParser:
     def parse_list_entry(self):
         self.skip_whitespace()
         self.take("-")
-        self.skip_whitespace()
+        self.skip(" ", "\t")
+
+        # after a newline it's a new thing if it starts with -
 
         chars = []
         chunks = []
@@ -203,6 +205,10 @@ class DialogueParser:
         if self.check("\n"):
             self.take("\n")
             self.skip_whitespace()
+
+            # no content in this section
+            if self.check("-"):
+                return ("DO", chunks)
 
         while not self.check("}"):
             if self.check("{"):

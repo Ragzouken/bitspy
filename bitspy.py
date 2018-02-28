@@ -45,6 +45,7 @@ KEY_BINDINGS = {
     pygame.K_2: "ALIGN",
 
     pygame.K_b: "PRINT_BOID",
+    pygame.K_w: "WHITELIST",
 }
 ##########
 
@@ -68,6 +69,11 @@ background.fill(RENDERER.BGR)
 bg_inc = 255
 bg_src = [(x, y) for x in xrange(16) for y in xrange(16)]
 bg_dst = [(x, y) for x in xrange(16) for y in xrange(16)]
+
+def whitelist(entry):
+    with open("whitelist.txt", "a") as file:
+        file.write("%s,%s\n" % (entry["boid"], entry["title"]))
+        print("whitelisted: %s" % entry["title"])
 
 def restart_program():
     """Restarts the current program.
@@ -427,7 +433,7 @@ class BitsyPlayer:
 
         variable = '{item "%s"}' % item_id
         self.world["variables"][variable] += 1
-        
+
         self.execute_dialogue(self.world["items"][item_id]["dialogue"])
 
     def get_tile_from_id(self, tile_id):
@@ -986,6 +992,8 @@ def game_loop():
                     clear_screen()
                 elif action == "PRINT_BOID":
                     print(launcher.selected["boid"])
+                elif action == "WHITELIST":
+                    whitelist(launcher.selected)
                 else:
                     used = False
 
