@@ -474,6 +474,11 @@ class BitsyPlayer:
             self.avatar_x = x
             self.avatar_y = y
 
+        for item in room["items"]:
+            if self.avatar_occupying_object(item):
+                self.take_item(item)
+                self.pre_render_room()
+
         for ending in room["endings"]:
             if self.avatar_occupying_object(ending):
                 self.use_ending(ending)
@@ -483,11 +488,6 @@ class BitsyPlayer:
             if self.avatar_occupying_object(exit):
                 self.use_exit(exit)
                 return
-
-        for item in room["items"]:
-            if self.avatar_occupying_object(item):
-                self.take_item(item)
-                self.pre_render_room()
 
     def pre_render_room(self):
         self.render_room_frame(self.room_frame_0, self.avatar_room, 0)
