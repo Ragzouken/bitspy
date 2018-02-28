@@ -314,8 +314,10 @@ class BitsyPlayer:
 
         self.set_room(self.world["sprites"]["A"]["room"])
 
-        self.execute_script(self.world["title"])
-        #self.buffer_dialogue(*self.world["title"])
+        self.execute_script(self.world["title"])#
+
+        if not self.dialogue_lines:
+            self.starting = False
 
     # because i use some fixed color replacements, need to make sure no palette
     # contains them...
@@ -858,9 +860,6 @@ def load_game():
 
         if boid in index:
             launcher.games.append(index[boid])
-
-            if "driftwood" in index[boid]["title"]:
-                print("what %s" % file)
 
     random.shuffle(launcher.games)
     launcher.games.sort(key=lambda entry: entry["date"])
