@@ -43,6 +43,8 @@ KEY_BINDINGS = {
 
     pygame.K_1: "ROTATE",
     pygame.K_2: "ALIGN",
+
+    pygame.K_b: "PRINT_BOID",
 }
 ##########
 
@@ -974,6 +976,8 @@ def game_loop():
                 elif action == "ALIGN":
                     ALIGN = (ALIGN + 1) % 3
                     clear_screen()
+                elif action == "PRINT_BOID":
+                    print(launcher.selected["boid"])
                 else:
                     used = False
 

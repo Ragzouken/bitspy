@@ -786,6 +786,7 @@ class BitsyParser:
             try:
                 dialogue["root"] = parser.parse()
             except:
+                pass
                 print("Couldn't parse:\n%s\n" % dialogue["text"])
                 traceback.print_exc()
 
@@ -813,6 +814,11 @@ class BitsyParser:
         if self.check_line(">"):
             self.take_line()
             graphic.append(self.parse_frame())
+
+        while self.check_line(">"):
+            self.take_line()
+            self.parse_frame()
+            print("discarding extra frame")
 
         return graphic
 

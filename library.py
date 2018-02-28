@@ -2,6 +2,7 @@
 import os
 import re
 import json
+import math
 import urllib2
 import csv
 import webbrowser
@@ -293,13 +294,14 @@ def draw_avatars_timeline(dates):
     pygame.image.save(page1, "timeline1.png")
     pygame.image.save(page2, "timeline2.png")
 
-def draw_avatars():
+def draw_avatars(index):
     pygame.init()
 
     renderer = Renderer()
 
     width = 35
-    height = 18
+    height = int(math.ceil(len(index) / float(width)))
+    print(width, height)
 
     gap = 0
 
@@ -390,6 +392,8 @@ if __name__ == "__main__":
                         help='copy archiveable games')
     parser.add_argument('--date', dest='date', action='store_true',
                         help='show avatars as histogram of date')
+    parser.add_argument('--strict', dest='strict', action='store_true',
+                        help='restrict index to authors who gave permission')
 
     args = parser.parse_args()
     
@@ -403,6 +407,18 @@ if __name__ == "__main__":
         open(index, "wb").write(content)
 
     index = read_index(StringIO(content))
+
+    authors = os.path.join(root, "authors.txt")
+    content = open(authors, "r+").read()
+    permissions = read_auth(StringIO(content))
+    archiveable = set()
+
+    for entry in permissions:
+        if entry["archive"]:
+            archiveable.add(entry["author"])
+
+    if args.strict:
+        index = OrderedDict((boid, entry) for boid, entry in index.iteritems() if entry["credit"] in archiveable)
 
     if args.validate:
         validate(index)
@@ -418,7 +434,7 @@ if __name__ == "__main__":
             print("%s // %s" % (entry["title"], get_version(entry)))
 
     if args.avatars:
-        draw_avatars()
+        draw_avatars(index)
 
     if args.date:
         first = min(entry["date"] for entry in index.itervalues())
@@ -456,17 +472,8 @@ if __name__ == "__main__":
                 traceback.print_exc()
 
     if args.archive:
-        authors = os.path.join(root, "authors.txt")
-        content = open(authors, "r+").read()
-        permissions = read_auth(StringIO(content))
-
-        archiveable = {}
         missing = {}
         count = 0
-
-        for entry in permissions:
-            if entry["archive"]:
-                archiveable[entry["author"]] = True
 
         for entry in index.itervalues():
             credit = entry["credit"]

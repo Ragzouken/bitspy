@@ -1,0 +1,3 @@
+boid,reason
+94612F67,blank screen
+70E9483E,exit/item priority

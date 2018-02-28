@@ -2,23 +2,24 @@
 5,Shadownat3
 4,Saranomy
 4,Awesomonster
+4,thatguynm
 3,Edited
-3,Cooltendo
+3,tom brinton
 3,JDM23
-3,thatguynm
 3,Peter Februar
+3,Casino
+3,Shonté
 3,Zeego
 3,Red Skald
 2,mutantcassidy
+2,Paolo Jose Cruz
 2,puprika
-2,verticalblanking
 2,~Jellyfish~
 2,Jess Driscoll
 2,quasiotter
 2,pixel games
 2,Limosky
 2,ManofPixels
-2,Scared Square Games
 2,zetef
 2,Riz'nt
 2,ReZStudios
@@ -28,52 +29,49 @@
 2,JcupDavis
 2,Clara / quixoticduck
 2,Slugzzz
-2,tom brinton
 2,LandOfLincoln
 2,AdventurJourney
 2,PhantomDreamer
-2,Bricabrac
 2,Sophie Houlden
 2,DrowniAce
 2,NotBambi
 2,SOULSKATER
 2,Living meme
-2,phoebe flowerditch
 2,lajiao
+2,Graic
 2,Shaggy Fires
-2,Laiska
 2,Harder You Fools
 2,ianmart1n
+2,Empha
 2,Jonas Hansen
 2,Ballad of Song
+2,Liam Cooke
 2,suger
 2,Tyler Brothers
 2,PixelCod
-2,Casino
 2,lordvark
 2,Maÿllis
 2,leonie
 2,Tom Ciccone
 2,Liquidus
 2,plasticrabbit
-2,onion
 2,Ludonaut
 2,ruthvik
+2,azuresama
 2,Papercookies
 2,rarelikeaunicorn
 2,chompicore
 2,RogueSquirrel
-2,IndieGage
-2,Shonté
 2,Kai20
 2,lunarDust
+2,David Mowatt‏
+2,AfterglowGames
 1,No Time To Play
 1,AQUANAUTS HOLIDAY
 1,eanbowman
 1,David Pixel
 1,PierrePlrd
 1,Izln
-1,Paolo Jose Cruz
 1,Moss.
 1,Plum
 1,Sjors Houkes
@@ -120,17 +118,20 @@
 1,Cosi1125
 1,jojodee
 1,imigraal
+1,rook
 1,ergi
 1,guinevak
 1,Unsteady Butterfly
 1,JSant
 1,eli fessler
+1,dfgw
 1,FalsionMono
 1,lykakspars
 1,Redye
 1,banaanzxcvbnm
 1,Tyu
 1,Peckan
+1,tommakesstuff
 1,Yukon W.
 1,Haché
 1,DGMKPixy
@@ -138,6 +139,7 @@
 1,skodone
 1,LostTrainDude
 1,Mimic Kairatta
+1,Liam Salmon
 1,nyankoe
 1,defaced
 1,Clement Panchout
@@ -168,7 +170,7 @@
 1,JohnLee Cooper
 1,Santum
 1,Pilchard
-1,Pierrec
+1,Way2Smart
 1,Ruune
 1,James Earl Cox III
 1,DatKewlKat
@@ -180,7 +182,6 @@
 1,Nathan Altice
 1,mikesuszek
 1,otterdisaster
-1,Adam Dixon
 1,Jack Le Hamster
 1,Froach Club
 1,Spaghatto
@@ -198,7 +199,6 @@
 1,southtonk
 1,akaCheezy
 1,Zenuel
-1,mildmojo
 1,HeraldineGames
 1,ajkolenc
 1,zzot
@@ -210,7 +210,6 @@
 1,shiny objects studio
 1,Foxx The Sleepy
 1,Moshi
-1,Graic
 1,GunShotGaming 2
 1,HinterBurnerGames
 1,Zushi3DHero
@@ -227,13 +226,13 @@
 1,reshmuh
 1,theunburnedwitch
 1,tuckie
-1,Empha
 1,IMLXH
 1,cubehero
 1,theExtinctGamer
 1,gringogidget
 1,JimmyTwist
 1,Wood Giant Studio
+1,m3g1dd0
 1,Harney-Barrow
 1,xandotoaster
 1,Devin Raposo
@@ -250,7 +249,6 @@
 1,cooljpeg
 1,uururernen
 1,miscslaineous
-1,Quantum Sheep
 1,OfficiousBrick
 1,timconceivable
 1,bubez
@@ -258,7 +256,10 @@
 1,swordpeddler
 1,Capital Ex
 1,fterglowGames
+1,Luke Davies
 1,Vincent Vially
+1,NoRain
+1,Tymus
 1,machinescreen
 1,lightcastle
 1,remyripple
@@ -268,7 +269,6 @@
 1,roboman
 1,carrotchipper
 1,Nash High
-1,Sam Keeper
 1,birdstare
 1,ErgoTM
 1,ManOoPixels
@@ -279,19 +279,21 @@
 1,Jamesheg
 1,Lvl 14 Bard
 1,Belty118
+1,ASquirrelsTail
 1,videodante
+1,Porpentine
+1,Sekamelica
 1,Oscar
 1,ergman
 1,Hazel-Rah
+15,Anonymous
 1,Yuwrenn
 1,hippietrashcan
 1,thetoolong
 1,Nenekiri
 1,Crip
-1,manofdoom
 1,wolfcartel
 1,leafykayo
-1,azuresama
 1,LittleGames
 1,BedWords
 1,Jerry Vishnevsky
@@ -303,40 +305,47 @@
 1,VOOOLN
 1,LJRadio
 1,Pizza GameDev
+1,SmickyG
 1,Arcadim
 1,Znlwomble
 1,oblatespheroid
+1,blazerboy
+1,Bea Malsky
 1,triplefox
+1,Nadia Wendt
 1,pixelartm
-1,Hangedman
 1,@buggyglitch
+1,chriskettlefrisby
 1,ocean-gem
 1,Efergan
+1,gepember
 1,erabbit
+1,Casey Danger
 1,jamesjpk123
 1,ZaqLovesBooks
+1,SnakeSqueaker
 1,screen implosion
 1,kwisd
 1,OhLookCake
 1,Robocop
 1,John Bujalski
+1,Diane
 1,Seik Sugaloth
 1,AD1Crazy
 1,mogibear
 1,cavegift
+1,andimlenny
 1,Savage//Noble
-1,MetalChouchen
 1,Saida Woolf
 1,noiseart
 1,Morakimo
 1,FleshPuzzle
 1,hyper structure
-1,SmickyG
 1,T. J. Field
 1,astrochili
 1,pwhite102
+1,gmx0
 1,MifficalDragon
 1,tktk27
-1,AfterglowGames
 1,Gweebit PROD
 1,Stavros Skamagkis
