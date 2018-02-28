@@ -839,7 +839,7 @@ def load_game():
     search = os.path.join(ROOT, "games", "*.bitsy.txt")
 
     global index
-    index = read_index(open(os.path.join(ROOT, "games", "index.txt"), "rb"))
+    index = read_index(open(os.path.join(ROOT, "index.txt"), "rb"))
 
     for file in glob.glob(search):
         path, filename = os.path.split(file)
