@@ -398,13 +398,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     index = os.path.join(root, "library", "index.txt")
-    content = open(index, "r+").read()
 
     if args.update:
         print("updating index...")
         url = r"https://docs.google.com/spreadsheets/d/1eBUgCYOnMJ9REHuZdTodc6Ft2Vs6JXbH4K-bIgL9TPc/gviz/tq?tqx=out:csv&sheet=Bitsy"
         content = urllib2.urlopen(url).read()
         open(index, "wb").write(content)
+
+    content = open(index, "r+").read()
 
     index = read_index(StringIO(content))
 
