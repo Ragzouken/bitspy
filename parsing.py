@@ -727,6 +727,7 @@ class BitsyParser:
 
         _, sprite["id"] = self.take_split(" ")
         sprite["graphic"] = self.parse_graphic()
+        sprite["name"] = self.parse_name()
 
         if self.check_line("DLG "):
             _, sprite["dialogue"] = self.take_line().split(" ", 1)
