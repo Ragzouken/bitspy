@@ -6,6 +6,7 @@ import glob
 import sys
 import os
 import traceback
+import csv
 
 import operator
 
@@ -44,8 +45,8 @@ KEY_BINDINGS = {
     pygame.K_1: "ROTATE",
     pygame.K_2: "ALIGN",
 
-    pygame.K_b: "PRINT_BOID",
-    pygame.K_w: "WHITELIST",
+    #pygame.K_b: "BLACKLIST",
+    #pygame.K_w: "WHITELIST",
 }
 ##########
 
@@ -70,10 +71,37 @@ bg_inc = 255
 bg_src = [(x, y) for x in xrange(16) for y in xrange(16)]
 bg_dst = [(x, y) for x in xrange(16) for y in xrange(16)]
 
+BLACKLIST = set()
+WHITELIST = set()
+
+def refresh_lists():
+    global WHITELIST, BLACKLIST
+
+    with open("whitelist.txt", "r") as file:
+        reader = csv.reader(file)
+        reader.next()
+
+        WHITELIST = set(row[0] for row in reader)
+
+    with open("blacklist.txt", "r") as file:
+        reader = csv.reader(file)
+        reader.next()
+
+        BLACKLIST = set(row[0] for row in reader)
+
+refresh_lists()
+
 def whitelist(entry):
     with open("whitelist.txt", "a") as file:
         file.write("%s,%s\n" % (entry["boid"], entry["title"]))
         print("whitelisted: %s" % entry["title"])
+    refresh_lists()
+
+def blacklist(entry):
+    with open("blacklist.txt", "a") as file:
+        file.write("%s,%s\n" % (entry["boid"], entry["title"]))
+        print("blacklisted: %s" % entry["title"])
+    refresh_lists()
 
 def restart_program():
     """Restarts the current program.
@@ -156,6 +184,7 @@ class Launcher:
         self.show_info = False
 
     def menu_input(self):
+        """
         if self.author is not None:
             self.author = None
             self.row = self.saved_row
@@ -167,9 +196,20 @@ class Launcher:
             self.saved_offset = self.offset
             self.row = 0
             self.offset = 0
-            self.subset = [game for game in self.games if game["credit"] == self.author]
+            self.subset = [game for game in self.games if game["credit"] == self.author]"""
 
+
+        self.row = random.randint(0, len(self.subset) - 1)
+        self.correct_cursor()
         self.render_page()
+
+    def correct_cursor(self):
+        d = self.row - self.offset
+
+        if d >= self.ROWS_PER_PAGE - 4:
+            self.offset = min(self.row - self.ROWS_PER_PAGE + 4, len(self.subset))
+        elif d <= 4:
+            self.offset = max(self.row - 4, 0)
 
     def input(self, action, pressed):
         if action == "MENU" and pressed:
@@ -198,14 +238,20 @@ class Launcher:
         elif action == "LEFT" and pressed:
             pass#self.show_info = False
 
-        d = self.row - self.offset
-
-        if d >= self.ROWS_PER_PAGE - 4:
-            self.offset = min(self.row - self.ROWS_PER_PAGE + 4, len(self.subset))
-        elif d <= 4:
-            self.offset = max(self.row - 4, 0)
-
+        self.correct_cursor()
         self.render_page()
+
+    def render_entry(self, entry, row):
+        text = entry["title"]
+
+        color = RENDERER.BLK
+
+        #if entry["boid"] in BLACKLIST:
+        #    color = (255, 0, 0)
+        #elif entry["boid"] in WHITELIST:
+        #    color = (0, 255, 0)
+
+        RENDERER.font.render_text_line(self.screen, text, 8 + 1, row * 12 + 8 + 2, color)
 
     def render_page(self):
         chunk = self.subset[self.offset:self.offset+self.ROWS_PER_PAGE]
@@ -218,17 +264,14 @@ class Launcher:
         #self.screen.fill((96, 0, 0), )
 
         if self.offset > 0:
-            text = self.subset[self.offset - 1]["title"]
-            RENDERER.font.render_text_line(self.screen, text, 8 + 1, -1 * 12 + 8 + 2, RENDERER.BLK)
+            self.render_entry(self.subset[self.offset - 1], -1)
 
         i = self.ROWS_PER_PAGE
         if self.offset+i < len(self.subset):
-            text = self.subset[self.offset+i]["title"]
-            RENDERER.font.render_text_line(self.screen, text, 8 + 1, i * 12 + 8 + 2, RENDERER.BLK)
+            self.render_entry(self.subset[self.offset+i], i)
 
         for i, entry in enumerate(chunk):
-            text = entry["title"]
-            RENDERER.font.render_text_line(self.screen, text, 8 + 1, i * 12 + 8 + 2, RENDERER.BLK)
+            self.render_entry(entry, i)
 
         info_x = 128
         info_y = 256 - 44
@@ -858,7 +901,7 @@ def load_game():
         path, filename = os.path.split(file)
         boid, _, _ = filename.split(".")
 
-        if boid in index:
+        if boid in index and boid in WHITELIST:
             launcher.games.append(index[boid])
 
     random.shuffle(launcher.games)
@@ -993,6 +1036,8 @@ def game_loop():
                     print(launcher.selected["boid"])
                 elif action == "WHITELIST":
                     whitelist(launcher.selected)
+                elif action == "BLACKLIST":
+                    blacklist(launcher.selected)
                 else:
                     used = False
 

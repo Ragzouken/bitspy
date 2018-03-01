@@ -1,0 +1,10 @@
+boid,name
+8059564A,Objective: cross the room.
+5D8AA0E5,onion detective 2
+1E2742E0,Silence would be Better
+640B5E37,TUNNEL
+0053B32F,TUNNEL
+6A3083F8,Super Mario Clouds
+196C5CFE,a day on the town
+94612F67,÷
+68005325,midnight

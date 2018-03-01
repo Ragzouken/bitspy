@@ -1,4 +1,0 @@
-boid,reason
-94612F67,blank screen
-70E9483E,exit/item priority
-5D8AA0E5,exit mod
