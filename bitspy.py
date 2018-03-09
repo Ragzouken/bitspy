@@ -61,6 +61,8 @@ buffer = pygame.Surface((256, 256))
 pygame.display.set_caption('bitspy')
 
 clock = pygame.time.Clock()
+pygame.time.set_timer(pygame.USEREVENT, 1000)
+TIMER = 0
 
 RENDERER = Renderer()
 
@@ -372,6 +374,13 @@ class BitsyPlayer:
         return self.world["rooms"][id]
 
     def input(self, action, pressed):
+        global TIMER
+
+        if TIMER >= 90:
+            TIMER = 0
+            switch_focus(launcher)
+            return
+
         if (action == "MENU" or action == "QUIT") and pressed:
             switch_focus(launcher)
             return
@@ -942,6 +951,12 @@ def draw():
         fps = str(round(clock.get_fps(), 1))
         RENDERER.font.render_text_line(player.screen, fps, 2, 2, RENDERER.BLK)
 
+    time = -1 if TIMER < 60 else 90 - TIMER
+
+    if FOCUS == player and time > 0:
+        reset = (" reset in %ss " % time)
+        RENDERER.font.render_text_line(player.screen, reset, 84, 240, RENDERER.BLK)
+
     screen2 = pygame.transform.rotate(player.screen, -90 * ROTATE)
     #screen2 = pygame.transform.scale2x(screen2)
     #screen2 = pygame.transform.scale(screen, (512, 512))
@@ -991,7 +1006,7 @@ def switch_focus(thing):
     FOCUS = thing
 
 def game_loop():
-    global ROTATE, ALIGN, RESTART, EXIT
+    global ROTATE, ALIGN, RESTART, EXIT, TIMER
 
     action = None
     pressed = False
@@ -1006,9 +1021,12 @@ def game_loop():
 
     while not EXIT:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.USEREVENT:
+                TIMER += 1
+            elif event.type == pygame.QUIT:
                 EXIT = True
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
+                TIMER = 0
                 pressed = True
 
                 for key, val in KEY_BINDINGS.iteritems():

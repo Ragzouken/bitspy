@@ -1,30 +1,37 @@
+6,Peter Februar
 5,Inco-Nito
 5,Shadownat3
 4,Saranomy
 4,Awesomonster
 4,thatguynm
+4,David Mowatt‏
 3,Edited
 3,tom brinton
 3,JDM23
-3,Peter Februar
+3,ianmart1n
 3,Casino
 3,Shonté
 3,Zeego
 3,Red Skald
+2,Moon
 2,mutantcassidy
+2,hardclumping
 2,Paolo Jose Cruz
 2,puprika
 2,~Jellyfish~
 2,Jess Driscoll
 2,quasiotter
 2,pixel games
+2,prep
 2,Limosky
 2,ManofPixels
 2,zetef
 2,Riz'nt
 2,ReZStudios
 2,Taras Tymoshenko
+2,Yenoxx
 2,toorte
+2,Marina Díez
 2,Calixarene
 2,JcupDavis
 2,Clara / quixoticduck
@@ -37,21 +44,24 @@
 2,NotBambi
 2,SOULSKATER
 2,Living meme
+2,Lorenzo Pilia
 2,lajiao
 2,Graic
 2,Shaggy Fires
+2,Zushi3DHero
 2,Harder You Fools
-2,ianmart1n
 2,Empha
 2,Jonas Hansen
 2,Ballad of Song
 2,Liam Cooke
+2,NicoAndOliver
 2,suger
 2,Tyler Brothers
 2,PixelCod
 2,lordvark
 2,Maÿllis
 2,leonie
+2,GIllianC
 2,Tom Ciccone
 2,Liquidus
 2,plasticrabbit
@@ -62,9 +72,10 @@
 2,rarelikeaunicorn
 2,chompicore
 2,RogueSquirrel
+2,chriskettlefrisby
+2,ayolland
 2,Kai20
 2,lunarDust
-2,David Mowatt‏
 2,AfterglowGames
 1,No Time To Play
 1,AQUANAUTS HOLIDAY
@@ -105,15 +116,17 @@
 1,Mnemogenic
 1,Centuria game dev
 1,Enterim
+1,moraresu
+1,Shalune
 1,Ali Star 302
 1,Claire Morley, Ashley Gwinnel
 1,riffsircar
+1,alligator
 1,Illud
 1,Tiny Worlds
 1,TENCOW
 1,eevee
 1,dom2d
-1,prep
 1,amithea
 1,Cosi1125
 1,jojodee
@@ -158,6 +171,7 @@
 1,573 Games
 1,mapedorr
 1,Mr. Yellow
+1,raulhaagensen
 1,popoishere
 1,stuey
 1,RhythmLynx
@@ -193,13 +207,14 @@
 1,bec
 1,Tinybeegames
 1,bethany
+1,aliabra
 1,Gmitchell
-1,Lorenzo Pilia
 1,ElectrumCube
 1,southtonk
 1,akaCheezy
 1,Zenuel
 1,HeraldineGames
+1,James Mackey
 1,ajkolenc
 1,zzot
 1,excuseforjuice
@@ -211,17 +226,20 @@
 1,Foxx The Sleepy
 1,Moshi
 1,GunShotGaming 2
+1,DasBilligeAlien
 1,HinterBurnerGames
-1,Zushi3DHero
 1,AgentAPM
 1,DisturbeD98
 1,Jake Tucker
+1,jakeypeach
 1,supiket
+1,Jodediah Holems
 1,TheoRosen
 1,ComputerJames
 1,himawariness
 1,jam
 1,granfaloney
+1,ImDaBanana
 1,Ollie M
 1,reshmuh
 1,theunburnedwitch
@@ -234,10 +252,11 @@
 1,Wood Giant Studio
 1,m3g1dd0
 1,Harney-Barrow
+1,birdrobot
 1,xandotoaster
 1,Devin Raposo
 1,CheeseCake
-1,magicalbitch
+1,darkpony
 1,meowchelle
 1,Lychee Games
 1,Rugiku
@@ -281,13 +300,16 @@
 1,Belty118
 1,ASquirrelsTail
 1,videodante
+1,CounterWiddershins
 1,Porpentine
 1,Sekamelica
+1,0014x
 1,Oscar
 1,ergman
 1,Hazel-Rah
 15,Anonymous
 1,Yuwrenn
+1,kalale
 1,hippietrashcan
 1,thetoolong
 1,Nenekiri
@@ -309,13 +331,15 @@
 1,Arcadim
 1,Znlwomble
 1,oblatespheroid
+1,squali
 1,blazerboy
+1,Silversober - Lisa
 1,Bea Malsky
+1,jeeyoh
 1,triplefox
 1,Nadia Wendt
 1,pixelartm
 1,@buggyglitch
-1,chriskettlefrisby
 1,ocean-gem
 1,Efergan
 1,gepember
@@ -323,6 +347,7 @@
 1,Casey Danger
 1,jamesjpk123
 1,ZaqLovesBooks
+1,dzudza
 1,SnakeSqueaker
 1,screen implosion
 1,kwisd

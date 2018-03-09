@@ -294,6 +294,56 @@ def draw_avatars_timeline(dates):
     pygame.image.save(page1, "timeline1.png")
     pygame.image.save(page2, "timeline2.png")
 
+def draw_average(index):
+    pygame.init()
+    renderer = Renderer()
+
+    graphic = [pygame.Surface((16, 16)), pygame.Surface((16, 16))]
+    sums = [[[0 for x in xrange(8)] for y in xrange(8)], [[0 for x in xrange(8)] for y in xrange(8)]]
+    avgs = [[[0 for x in xrange(8)] for y in xrange(8)], [[0 for x in xrange(8)] for y in xrange(8)]]
+    count = 0.0
+
+    for entry in index.itervalues():
+        try:
+            world = get_world(entry["boid"])
+
+            if len(world["tiles"]) > 0:
+                graphic_ = world["sprites"]["A"]["graphic"]
+                
+                if len(graphic_) > 1:
+                    frame1, frame2 = graphic_[0], graphic_[-1]
+
+                    for y in xrange(8):
+                        for x in xrange(8):
+                            sums[0][y][x] += 1 if frame1[y][x] else 0
+                            sums[1][y][x] += 1 if frame2[y][x] else 0
+                    count += 1
+
+        except Exception as e:
+            pass
+
+    for y in xrange(8):
+        for x in xrange(8):
+            avgs[0][y][x] = sums[0][y][x] / count > 0.5
+            avgs[1][y][x] = sums[1][y][x] / count > 0.5
+
+    """
+    for y in xrange(0, 8):
+        for x in xrange(0, 8):
+            avg = avgs[0][y][x] * 255
+            color = (avg, avg, avg)
+            graphic[0].fill(color, (x * 2, y * 2, 2, 2))
+
+            avg = avgs[1][y][x] * 255
+            color = (avg, avg, avg)
+            graphic[1].fill(color, (x * 2, y * 2, 2, 2))"""
+
+    renderer.render_frame_to_surface(graphic[0], avgs[0], (255, 255, 255), (0, 0, 0))
+    renderer.render_frame_to_surface(graphic[1], avgs[1], (255, 255, 255), (0, 0, 0))
+
+    pygame.image.save(graphic[0], "average1.png")
+    pygame.image.save(graphic[1], "average2.png")
+
 def draw_avatars(index):
     pygame.init()
 
@@ -384,6 +434,8 @@ if __name__ == "__main__":
                         help='print all bitsy versions')
     parser.add_argument('--avatars', '-a', dest='avatars', action='store_true',
                         help='generate avatar collage')
+    parser.add_argument('--average', dest='average', action='store_true',
+                        help='generate average avatar')
     parser.add_argument('--dialogues', dest='dialogues', action='store_true',
                         help='output all dialogues')
     parser.add_argument('--test-dialogue', '-td', dest='test_dialogue', action='store_true',
@@ -433,6 +485,9 @@ if __name__ == "__main__":
     if args.versions:
         for entry in index.itervalues():
             print("%s // %s" % (entry["title"], get_version(entry)))
+
+    if args.average:
+        draw_average(index)
 
     if args.avatars:
         draw_avatars(index)
