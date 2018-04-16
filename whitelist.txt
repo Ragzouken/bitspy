@@ -211,3 +211,11 @@ E69239EF,It's Pretty Dark
 FC8A7441,LEFT UNDETECTED
 974AA125,A Midnight Star
 41B01B3A,Derek's Game
+13935F38,A Ghost in the Thrift Store
+8EF8319B,You Have A Destiny: A Game About Gods and Prophecy
+51DD0198,I, Medusa
+00E45DC5,Hark! You Are A Dragon
+D2A4D690,Cryptid Hunt feat. Mothman
+B9E61BC6,It has been 36 seconds since the accident with the Expando-Beam
+EC8E4594,Before Midnight
+1663A765,Service Disruptions

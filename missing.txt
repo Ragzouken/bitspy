@@ -2,14 +2,15 @@
 5,Inco-Nito
 5,Shadownat3
 4,Saranomy
-4,Awesomonster
 4,thatguynm
-4,David Mowatt‏
+4,Casino
 3,Edited
+3,Marina Díez
 3,tom brinton
 3,JDM23
 3,ianmart1n
-3,Casino
+3,0014x
+3,chriskettlefrisby
 3,Shonté
 3,Zeego
 3,Red Skald
@@ -31,7 +32,6 @@
 2,Taras Tymoshenko
 2,Yenoxx
 2,toorte
-2,Marina Díez
 2,Calixarene
 2,JcupDavis
 2,Clara / quixoticduck
@@ -54,7 +54,6 @@
 2,Jonas Hansen
 2,Ballad of Song
 2,Liam Cooke
-2,NicoAndOliver
 2,suger
 2,Tyler Brothers
 2,PixelCod
@@ -69,15 +68,18 @@
 2,ruthvik
 2,azuresama
 2,Papercookies
+2,NicoAndOliver
 2,rarelikeaunicorn
 2,chompicore
 2,RogueSquirrel
-2,chriskettlefrisby
 2,ayolland
 2,Kai20
 2,lunarDust
+2,andimlenny
+2,VtheWanderer
 2,AfterglowGames
 1,No Time To Play
+1,Veksell
 1,AQUANAUTS HOLIDAY
 1,eanbowman
 1,David Pixel
@@ -92,6 +94,7 @@
 1,Virento Voshe
 1,Fishbonez
 1,ArtSvetlakov
+1,deepbluezengames
 1,halkon
 1,ashlow
 1,llove
@@ -125,6 +128,7 @@
 1,Illud
 1,Tiny Worlds
 1,TENCOW
+1,EtoDemerzel
 1,eevee
 1,dom2d
 1,amithea
@@ -148,6 +152,7 @@
 1,Yukon W.
 1,Haché
 1,DGMKPixy
+1,Pedro Paiva
 1,HeyKarakItsAli
 1,skodone
 1,LostTrainDude
@@ -204,6 +209,7 @@
 1,Lily Lapidese
 1,Andy Miller
 1,laitze.fan
+1,CleansingKaschmir
 1,bec
 1,Tinybeegames
 1,bethany
@@ -214,6 +220,7 @@
 1,akaCheezy
 1,Zenuel
 1,HeraldineGames
+1,Adeline
 1,James Mackey
 1,ajkolenc
 1,zzot
@@ -267,6 +274,7 @@
 1,Kydrang
 1,cooljpeg
 1,uururernen
+1,Jeremiah Watts
 1,miscslaineous
 1,OfficiousBrick
 1,timconceivable
@@ -283,6 +291,7 @@
 1,lightcastle
 1,remyripple
 1,Middle Mouse
+1,Glutnix
 1,Permafried Games
 1,JTHomeslice
 1,roboman
@@ -303,7 +312,6 @@
 1,CounterWiddershins
 1,Porpentine
 1,Sekamelica
-1,0014x
 1,Oscar
 1,ergman
 1,Hazel-Rah
@@ -327,7 +335,7 @@
 1,VOOOLN
 1,LJRadio
 1,Pizza GameDev
-1,SmickyG
+1,Emma Dee
 1,Arcadim
 1,Znlwomble
 1,oblatespheroid
@@ -339,6 +347,7 @@
 1,triplefox
 1,Nadia Wendt
 1,pixelartm
+1,pine-cone
 1,@buggyglitch
 1,ocean-gem
 1,Efergan
@@ -359,17 +368,18 @@
 1,AD1Crazy
 1,mogibear
 1,cavegift
-1,andimlenny
 1,Savage//Noble
 1,Saida Woolf
 1,noiseart
 1,Morakimo
 1,FleshPuzzle
 1,hyper structure
+1,SmickyG
 1,T. J. Field
 1,astrochili
 1,pwhite102
 1,gmx0
+1,Enric Llagostera
 1,MifficalDragon
 1,tktk27
 1,Gweebit PROD

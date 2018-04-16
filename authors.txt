@@ -50,7 +50,7 @@ phoebe flowerditch,X,X
 Adam Dixon,X,X
 Pierrec,X,X
 AptGhost,X,X
-David Mowatt,X,X
+David Mowatt‏,X,X
 Quantum Sheep,X,X
 Sam Keeper,X,X
 Giada Zavarise,X,X
@@ -63,3 +63,5 @@ manofdoom,X,X
 MetalChouchen,X,X
 magicalbitch,X,X
 ninfa,X,X
+Stuart Lilford,X,X
+Awesomonster,X,X
