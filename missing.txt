@@ -2,10 +2,8 @@
 5,Inco-Nito
 5,Shadownat3
 4,Saranomy
-4,thatguynm
 4,Casino
 3,Edited
-3,Marina Díez
 3,tom brinton
 3,JDM23
 3,ianmart1n
@@ -50,7 +48,6 @@
 2,Shaggy Fires
 2,Zushi3DHero
 2,Harder You Fools
-2,Empha
 2,Jonas Hansen
 2,Ballad of Song
 2,Liam Cooke
@@ -66,13 +63,11 @@
 2,plasticrabbit
 2,Ludonaut
 2,ruthvik
-2,azuresama
 2,Papercookies
 2,NicoAndOliver
 2,rarelikeaunicorn
 2,chompicore
 2,RogueSquirrel
-2,ayolland
 2,Kai20
 2,lunarDust
 2,andimlenny
@@ -149,7 +144,7 @@
 1,Tyu
 1,Peckan
 1,tommakesstuff
-1,Yukon W.
+1,Way2Smart
 1,Haché
 1,DGMKPixy
 1,Pedro Paiva
@@ -189,7 +184,7 @@
 1,JohnLee Cooper
 1,Santum
 1,Pilchard
-1,Way2Smart
+1,Yukon W.
 1,Ruune
 1,James Earl Cox III
 1,DatKewlKat
@@ -291,7 +286,6 @@
 1,lightcastle
 1,remyripple
 1,Middle Mouse
-1,Glutnix
 1,Permafried Games
 1,JTHomeslice
 1,roboman
@@ -341,7 +335,6 @@
 1,oblatespheroid
 1,squali
 1,blazerboy
-1,Silversober - Lisa
 1,Bea Malsky
 1,jeeyoh
 1,triplefox
