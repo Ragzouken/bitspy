@@ -724,7 +724,7 @@ class BitsyParser:
             tile["wall"] = self.take_split(" ")[1].strip() == "true"
 
         if self.check_line("COL "):
-            _, tile["color"] = int(self.take_line().split(" ", 1))
+            tile["color"] = int(self.take_line().split(" ", 1)[1])
 
         self.add_object("tiles", tile)
 
@@ -753,7 +753,7 @@ class BitsyParser:
             sprite["items"][id] = int(count)
 
         if self.check_line("COL "):
-            _, sprite["color"] = int(self.take_line().split(" ", 1))
+            sprite["color"] = int(self.take_line().split(" ", 1)[1])
 
         self.add_object("sprites", sprite)
 
@@ -772,7 +772,7 @@ class BitsyParser:
             _, item["dialogue"] = self.take_line().split(" ", 1)
 
         if self.check_line("COL "):
-            _, item["color"] = int(self.take_line().split(" ", 1))
+            item["color"] = int(self.take_line().split(" ", 1)[1])
 
         self.add_object("items", item)
 
