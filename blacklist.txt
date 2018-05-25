@@ -14,3 +14,5 @@ boid,name
 74E0F6EF,Why are all these ghosts coming after you?
 49F56F40,sun machine
 284796EB,Dril Simulator 2018
+5295F9E7,Zelda? I Hardly Knew 'Er!
+209B9517,Combat Dungeon
