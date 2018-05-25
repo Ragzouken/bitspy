@@ -12,3 +12,5 @@ boid,name
 512739F5,Little duck's big adventure: a bitsy RPG
 99D3DF43,h e l l
 74E0F6EF,Why are all these ghosts coming after you?
+49F56F40,sun machine
+284796EB,Dril Simulator 2018

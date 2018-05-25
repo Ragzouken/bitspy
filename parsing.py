@@ -600,6 +600,9 @@ class BitsyParser:
         palette["name"] = self.parse_name()
         palette["colors"] = [self.parse_color(), self.parse_color(), self.parse_color()]
 
+        while not self.check_blank():
+            palette["colors"].append(self.parse_color())
+
         self.add_object("palettes", palette)
 
     def parse_color(self):
@@ -720,6 +723,9 @@ class BitsyParser:
         if self.check_line("WAL "):
             tile["wall"] = self.take_split(" ")[1].strip() == "true"
 
+        if self.check_line("COL "):
+            _, tile["color"] = int(self.take_line().split(" ", 1))
+
         self.add_object("tiles", tile)
 
     def parse_sprite(self):
@@ -746,6 +752,9 @@ class BitsyParser:
             _, id, count = self.take_split(" ")
             sprite["items"][id] = int(count)
 
+        if self.check_line("COL "):
+            _, sprite["color"] = int(self.take_line().split(" ", 1))
+
         self.add_object("sprites", sprite)
 
     def parse_item(self):
@@ -761,6 +770,9 @@ class BitsyParser:
 
         if self.check_line("DLG "):
             _, item["dialogue"] = self.take_line().split(" ", 1)
+
+        if self.check_line("COL "):
+            _, item["color"] = int(self.take_line().split(" ", 1))
 
         self.add_object("items", item)
 
