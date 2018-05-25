@@ -376,7 +376,7 @@ def draw_avatars(index):
                 titles.append(entry["title"])
         except Exception as e:
             print("Couldn't parse '%s' (%s)" % (entry["title"], entry["boid"]))
-            traceback.print_exc()
+            #traceback.print_exc()
 
     maps = []
 
@@ -395,6 +395,8 @@ def draw_avatars(index):
 
     pygame.image.save(page1, "avatars1.png")
     pygame.image.save(page2, "avatars2.png")
+
+    print(len(index), len(values1))
 
     with open("avatars.html", "w") as html:
         html.write('<html><body><img src="avatars.gif" usemap="#avatars">\n')
@@ -415,6 +417,9 @@ def print_dialogues():
             for dialogue in world["dialogues"].itervalues():
                 file.write(dialogue["text"])
                 file.write("\n\n")
+
+def allowed(archiveable, credit):
+    return all(part in archiveable for part in credit.split(", "))
 
 if __name__ == "__main__":
     root = os.path.dirname(__file__)
@@ -534,11 +539,14 @@ if __name__ == "__main__":
         for entry in index.itervalues():
             credit = entry["credit"]
 
-            if credit in archiveable:
+            if allowed(archiveable, credit):
                 print(entry["title"])
                 count += 1
                 src = os.path.join(ROOT, "library", "%s.bitsy.txt" % entry["boid"])
-                copy(src, os.path.join(root, "archive/"))
+                try:
+                    copy(src, os.path.join(root, "archive/"))
+                except Exception as e:
+                    print(e)
             else:
                 if credit not in missing:
                     missing[credit] = 0

@@ -45,8 +45,8 @@ KEY_BINDINGS = {
     pygame.K_1: "ROTATE",
     pygame.K_2: "ALIGN",
 
-    #pygame.K_b: "BLACKLIST",
-    #pygame.K_w: "WHITELIST",
+    pygame.K_b: "BLACKLIST",
+    pygame.K_w: "WHITELIST",
 }
 ##########
 
@@ -248,10 +248,10 @@ class Launcher:
 
         color = RENDERER.BLK
 
-        #if entry["boid"] in BLACKLIST:
-        #    color = (255, 0, 0)
-        #elif entry["boid"] in WHITELIST:
-        #    color = (0, 255, 0)
+        if entry["boid"] in BLACKLIST:
+            color = (255, 0, 0)
+        elif entry["boid"] in WHITELIST:
+            color = (0, 255, 0)
 
         RENDERER.font.render_text_line(self.screen, text, 8 + 1, row * 12 + 8 + 2, color)
 
@@ -910,7 +910,7 @@ def load_game():
         path, filename = os.path.split(file)
         boid, _, _ = filename.split(".")
 
-        if boid in index and boid in WHITELIST:
+        if boid in index:# and boid in WHITELIST:
             launcher.games.append(index[boid])
 
     random.shuffle(launcher.games)

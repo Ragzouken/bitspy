@@ -827,7 +827,7 @@ class BitsyParser:
         while self.check_line(">"):
             self.take_line()
             self.parse_frame()
-            print("discarding extra frame")
+            #print("discarding extra frame")
 
         return graphic
 
